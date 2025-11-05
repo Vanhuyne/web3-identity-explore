@@ -6,6 +6,21 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="0x.jpeg">
+  <meta name="fc:miniapp" content='{
+  "version":"next",
+  "imageUrl":"https://your-domain.com/assets/embed.png",
+  "button":{
+    "title":"Open App",
+    "action":{
+      "type":"launch_miniapp",
+      "name":"My Angular Mini App",
+      "url":"https://your-domain.com",
+      "splashImageUrl":"https://your-domain.com/assets/splash.png",
+      "splashBackgroundColor":"#ffffff"
+    }
+  }
+}' />
+
 </head>
 <body>
   <app-root></app-root>
