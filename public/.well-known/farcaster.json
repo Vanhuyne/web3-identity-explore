@@ -1,4 +1,17 @@
 {
+  "frame": {
+    "name": " Web3 Identity",
+    "version": "1",
+    "iconUrl": "https://web3-identity-find.vercel.app/0x.jpeg",
+    "homeUrl": "https://web3-identity-find.vercel.app",
+    "imageUrl": "https://web3-identity-find.vercel.app/0x.jpeg",
+    "splashImageUrl": "https://web3-identity-find.vercel.app/splash.png",
+    "splashBackgroundColor": "#ffffff",
+    "webhookUrl": "https://web3-identity-find.vercel.app/api/webhook",
+    "subtitle": "web3 identity explore",
+    "description": "Build web3 identity explore cross-platform",
+    "primaryCategory": "social"
+  },
   "accountAssociation": {
     "header": "eyJmaWQiOjExMzkwNDcsInR5cGUiOiJhdXRoIiwia2V5IjoiMHhBMzBmNmYwOTFBYkJlZDc4NzEyOWJBNEMxYmQwMzcxRDZBQ0RDZGM1In0",
     "payload": "eyJkb21haW4iOiJ3ZWIzLWlkZW50aXR5LWZpbmQudmVyY2VsLmFwcCJ9",
