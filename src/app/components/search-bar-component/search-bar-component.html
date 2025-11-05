@@ -1,0 +1,27 @@
+<div class="w-full max-w-2xl mx-auto space-y-4">
+  <!-- Search Bar -->
+  <div class="w-full bg-white rounded-xl shadow-lg flex items-center px-4 py-3
+              focus-within:ring-2 focus-within:ring-blue-500 transition
+              max-[430px]:max-w-full">
+    <input
+      type="text"
+      [(ngModel)]="searchQuery"
+      placeholder="Search by wallet, ENS, username, FID..."
+      (keyup.enter)="onSearch()"
+      class="flex-grow bg-transparent outline-none text-gray-700 text-base placeholder-gray-400 max-[430px]:text-sm"
+    />
+    <button 
+      (click)="onSearch()"
+      [disabled]="!searchQuery.trim()"
+      [class.opacity-50]="!searchQuery.trim()"
+      [class.cursor-not-allowed]="!searchQuery.trim()"
+      class="p-2 hover:bg-gray-100 rounded-lg transition">
+      <i class="fa fa-search text-gray-500 text-lg"></i>
+    </button>
+  </div>
+
+  <!-- Helper Text -->
+  <p class="text-center text-sm text-gray-500 max-[430px]:text-xs">
+    We'll search across all Web3 platforms automatically
+  </p>
+</div>
