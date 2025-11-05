@@ -1,0 +1,32 @@
+{
+  "accountAssociation": {
+    "header": "",
+    "payload": "",
+    "signature": ""
+  },
+  "baseBuilder": {
+    "ownerAddress": "0x5a5Ad10708cB03200145FEC653B8a34A9aa75960"
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "My Angular Mini App",
+    "homeUrl": "https://your-domain.com",
+    "iconUrl": "https://your-domain.com/assets/icon.png",
+    "splashImageUrl": "https://your-domain.com/assets/splash.png",
+    "splashBackgroundColor": "#ffffff",
+    "webhookUrl": "https://your-domain.com/api/webhook",
+    "subtitle": "Angular Mini App",
+    "description": "Mini app built with Angular for Base platform.",
+    "screenshotUrls": [
+      "https://your-domain.com/assets/ss1.png"
+    ],
+    "primaryCategory": "social",
+    "tags": ["angular", "miniapp", "base"],
+    "heroImageUrl": "https://your-domain.com/assets/og.png",
+    "tagline": "Powered by Angular",
+    "ogTitle": "My Angular Mini App",
+    "ogDescription": "Built with Angular and deployed on Base",
+    "ogImageUrl": "https://your-domain.com/assets/og.png",
+    "noindex": true
+  }
+}

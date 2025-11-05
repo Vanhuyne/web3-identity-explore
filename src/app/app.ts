@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { SearchBarComponent } from "./components/search-bar-component/search-bar-component";
+import { sdk } from '@farcaster/miniapp-sdk';
+
 
 @Component({
   selector: 'app-root',
@@ -8,6 +9,11 @@ import { SearchBarComponent } from "./components/search-bar-component/search-bar
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App {
+export class App implements OnInit {
   protected title = 'web3-identity-explorer';
+
+  async ngOnInit() {
+    // Gọi ngay sau khi ứng dụng sẵn sàng để hiển thị
+    await sdk.actions.ready();
+  }
 }
