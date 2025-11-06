@@ -1,5 +1,5 @@
 <!-- Wrapper: full gradient background -->
-<div class="min-h-screen bg-gradient-to-b from-[#fdebe9] to-[#e9f1ff] flex flex-col justify-center">
+<div class="min-h-screen bg-gradient-to-b from-[#e9f8fd] to-[#e9f1ff] flex flex-col justify-center">
 
   <!-- Section chính: chiếm 2/3 chiều cao -->
   <section class="flex flex-col justify-center h-[66vh] px-6">
@@ -15,7 +15,8 @@
 
       <!-- Search Bar Component with Event Binding -->
       <app-search-bar-component 
-        (search)="handleSearch($event)">
+        (search)="handleSearch($event)"
+        (clear)="handleClear()">
       </app-search-bar-component>
 
       <!-- Trending -->
@@ -23,26 +24,31 @@
         <span class="font-semibold">Trending:</span>
         <div class="flex flex-wrap gap-2 mt-2">
           <button 
+            (click)="handleSearch('vitalik.eth')"
             class="flex items-center gap-1 bg-white rounded-full shadow px-3 py-1 hover:shadow-md transition cursor-pointer">
             <img src="assets/icons/ens.jpeg" class="w-4 h-4" alt="icon" />
             vitalik.eth
           </button>
           <button 
+            (click)="handleSearch('0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045')"
             class="flex items-center gap-1 bg-white rounded-full shadow px-3 py-1 hover:shadow-md transition cursor-pointer">
             <img src="assets/icons/eth.png" class="w-4 h-4" alt="icon" />
             0xd8da...6045
           </button>
           <button 
+            (click)="handleSearch('dwr.eth')"
             class="flex items-center gap-1 bg-white rounded-full shadow px-3 py-1 hover:shadow-md transition cursor-pointer">
             <img src="assets/icons/farcaster.webp" class="w-4 h-4" alt="icon" />
             dwr.eth
           </button>
           <button 
+            (click)="handleSearch('stani.lens')"
             class="flex items-center gap-1 bg-white rounded-full shadow px-3 py-1 hover:shadow-md transition cursor-pointer">
             <img src="assets/icons/lens.jpg" class="w-4 h-4" alt="icon" />
             stani.lens
           </button>
           <button 
+            (click)="handleSearch('suji_yan')"
             class="flex items-center gap-1 bg-white rounded-full shadow px-3 py-1 hover:shadow-md transition cursor-pointer">
             <img src="assets/icons/x.png" class="w-4 h-4" alt="icon" />
             suji_yan
@@ -81,10 +87,10 @@
       <div *ngIf="identityService.identity$ | async as identity" class="animate-fadeIn">
         <div class="bg-white rounded-xl shadow-xl p-6">
           <!-- Header -->
-          <div class="mb-6">
+          <!-- <div class="mb-6">
             <h2 class="text-2xl font-bold text-gray-900">Connected Identities</h2>
             <p class="text-gray-500 text-sm mt-1">Found {{ identity.allProfiles.length }} profile(s)</p>
-          </div>
+          </div> -->
 
           <!-- All Profiles Grid -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -222,9 +228,9 @@
           </div>
 
           <!-- Total Count -->
-          <div class="mt-6 text-center text-gray-500 text-sm">
+          <!-- <div class="mt-6 text-center text-gray-500 text-sm">
             Found {{ identity.allProfiles.length }} connected profile(s)
-          </div>
+          </div> -->
         </div>
       </div>
 

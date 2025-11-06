@@ -10,7 +10,7 @@ import { sdk } from '@farcaster/miniapp-sdk';
   styleUrl: './app.css'
 })
 export class App implements OnInit {
-  protected title = 'web3-identity-explorer';
+  protected title = 'Web3 identity explorer';
 
   async ngOnInit() {
     // Gọi ngay sau khi ứng dụng sẵn sàng để hiển thị

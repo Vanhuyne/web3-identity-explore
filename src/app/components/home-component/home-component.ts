@@ -19,22 +19,23 @@ export class HomeComponent {
     private router: Router
   ) {}
 
+  currentSearchQuery: string = '';
+
+  handleClear(): void {
+    // Clear the search input and results
+    console.log('Clearing search');
+    this.currentSearchQuery = '';
+    this.identityService.clearIdentity();
+  }
+
   handleSearch(query: string): void {
     // Clear any previous search results
     this.identityService.clearIdentity();
     
     // Perform the search across all platforms
     this.identityService.searchIdentity(query);
-    
-    // Navigate to results page (if you have one)
-    // Uncomment this if you want to navigate to a results page
-    // this.router.navigate(['/results']);
+  
   }
 
-  // Optional: Handle trending searches
-  searchTrending(query: string, platform: string): void {
-    // You can implement clicking on trending items to auto-search
-    console.log('Trending search:', query, platform);
-  }
 
 }
