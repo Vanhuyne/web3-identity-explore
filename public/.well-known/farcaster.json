@@ -1,14 +1,14 @@
 {
   "frame": {
-    "name": " Web3 Identity",
+    "name": "Web3 Identity",
     "version": "1",
-    "iconUrl": "https://web3-identity-find.vercel.app/0x.jpeg",
+    "iconUrl": "https://web3-identity-find.vercel.app/logo.png",
     "homeUrl": "https://web3-identity-find.vercel.app",
-    "imageUrl": "https://web3-identity-find.vercel.app/0x.jpeg",
-    "splashImageUrl": "https://web3-identity-find.vercel.app/splash.png",
+    "imageUrl": "https://web3-identity-find.vercel.app/logo.png",
+    "splashImageUrl": "https://web3-identity-find.vercel.app/search-now.jpg",
     "splashBackgroundColor": "#ffffff",
     "webhookUrl": "https://web3-identity-find.vercel.app/api/webhook",
-    "subtitle": "web3 identity explore",
+    "subtitle": "Web3 identity explore",
     "description": "Build web3 identity explore cross-platform",
     "primaryCategory": "social"
   },
@@ -22,24 +22,24 @@
   },
   "miniapp": {
     "version": "1",
-    "name": "My Angular Mini App",
-    "homeUrl": "https://your-domain.com",
-    "iconUrl": "https://your-domain.com/assets/icon.png",
-    "splashImageUrl": "https://your-domain.com/assets/splash.png",
+    "name": "Build web3 identity explore cross-platform",
+    "homeUrl": "https://web3-identity-find.vercel.app",
+    "iconUrl": "https://web3-identity-find.vercel.app/logo.png",
+    "splashImageUrl": "https://web3-identity-find.vercel.app/logo.png",
     "splashBackgroundColor": "#ffffff",
-    "webhookUrl": "https://your-domain.com/api/webhook",
-    "subtitle": "Angular Mini App",
-    "description": "Mini app built with Angular for Base platform.",
+    "webhookUrl": "https://web3-identity-find.vercel.app/api/webhook",
+    "subtitle": "Web3 identity explore",
+    "description": "Build web3 identity explore cross-platform",
     "screenshotUrls": [
-      "https://your-domain.com/assets/ss1.png"
+      "https://web3-identity-find.vercel.app/screen-shot.png"
     ],
     "primaryCategory": "social",
     "tags": ["angular", "miniapp", "base"],
-    "heroImageUrl": "https://your-domain.com/assets/og.png",
+    "heroImageUrl": "https://web3-identity-find.vercel.app/search-now.jpg",
     "tagline": "Powered by Angular",
-    "ogTitle": "My Angular Mini App",
-    "ogDescription": "Built with Angular and deployed on Base",
-    "ogImageUrl": "https://your-domain.com/assets/og.png",
+    "ogTitle": "Web3 Identity Explorer - Built with Angular and deployed on Base",
+    "ogDescription": "Build web3 identity explore cross-platform",
+    "ogImageUrl": "https://web3-identity-find.vercel.app/logo.png",
     "noindex": true
   }
 }
