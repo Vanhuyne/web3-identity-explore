@@ -1,6 +1,20 @@
 <!-- Wrapper: full gradient background -->
 <div class="min-h-screen bg-gradient-to-b from-[#e9f8fd] to-[#e9f1ff] flex flex-col justify-center">
 
+  <!-- Bookmarks Button - Fixed Position -->
+  <a [routerLink]="['/bookmarks']" 
+     class="fixed top-6 right-6 z-50 flex items-center gap-2 bg-white rounded-full shadow-lg px-4 py-2 hover:shadow-xl transition cursor-pointer">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
+         class="w-5 h-5 text-blue-600">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+    </svg>
+    <span class="font-semibold text-gray-900 max-[430px]:hidden">Bookmarks</span>
+    <span *ngIf="bookmarkService.getBookmarksCount() > 0" 
+          class="bg-blue-600 text-white rounded-full px-2 py-0.5 text-xs font-bold min-w-[20px] text-center">
+      {{ bookmarkService.getBookmarksCount() }}
+    </span>
+  </a>
+
   <!-- Section chính: chiếm 2/3 chiều cao -->
   <section class="flex flex-col justify-center h-[66vh] px-6">
     <div class="max-w-xl w-full mx-auto text-left">
@@ -86,16 +100,20 @@
       <!-- Results -->
       <div *ngIf="identityService.identity$ | async as identity" class="animate-fadeIn">
         <div class="bg-white rounded-xl shadow-xl p-6">
-          <!-- Header -->
-          <!-- <div class="mb-6">
-            <h2 class="text-2xl font-bold text-gray-900">Connected Identities</h2>
-            <p class="text-gray-500 text-sm mt-1">Found {{ identity.allProfiles.length }} profile(s)</p>
-          </div> -->
-
           <!-- All Profiles Grid -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Farcaster -->
-            <div *ngIf="identity.farcaster" class="p-4 bg-purple-50 rounded-lg border border-purple-100">
+            <div *ngIf="identity.farcaster" class="relative p-4 bg-purple-50 rounded-lg border border-purple-100">
+              <button 
+                (click)="toggleBookmark('farcaster', identity.farcaster)"
+                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none"
+                [attr.aria-label]="isBookmarked('farcaster') ? 'Remove bookmark' : 'Add bookmark'">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
+                     class="w-6 h-6 transition-colors"
+                     [ngClass]="isBookmarked('farcaster') ? 'fill-purple-600 stroke-purple-600' : 'fill-none stroke-purple-400'">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                </svg>
+              </button>
               <div class="flex items-center gap-3">
                 <img 
                   *ngIf="identity.farcaster.avatar" 
@@ -117,7 +135,17 @@
             </div>
 
             <!-- ENS -->
-            <div *ngIf="identity.ens" class="p-4 bg-blue-50 rounded-lg border border-blue-100">
+            <div *ngIf="identity.ens" class="relative p-4 bg-blue-50 rounded-lg border border-blue-100">
+              <button 
+                (click)="toggleBookmark('ens', identity.ens)"
+                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none"
+                [attr.aria-label]="isBookmarked('ens') ? 'Remove bookmark' : 'Add bookmark'">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
+                     class="w-6 h-6 transition-colors"
+                     [ngClass]="isBookmarked('ens') ? 'fill-blue-600 stroke-blue-600' : 'fill-none stroke-blue-400'">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                </svg>
+              </button>
               <div class="flex items-center gap-3">
                 <img 
                   *ngIf="identity.ens.avatar" 
@@ -139,7 +167,17 @@
             </div>
 
             <!-- Twitter -->
-            <div *ngIf="identity.twitter" class="p-4 bg-sky-50 rounded-lg border border-sky-100">
+            <div *ngIf="identity.twitter" class="relative p-4 bg-sky-50 rounded-lg border border-sky-100">
+              <button 
+                (click)="toggleBookmark('twitter', identity.twitter)"
+                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none"
+                [attr.aria-label]="isBookmarked('twitter') ? 'Remove bookmark' : 'Add bookmark'">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
+                     class="w-6 h-6 transition-colors"
+                     [ngClass]="isBookmarked('twitter') ? 'fill-sky-600 stroke-sky-600' : 'fill-none stroke-sky-400'">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                </svg>
+              </button>
               <div class="flex items-center gap-3">
                 <img 
                   *ngIf="identity.twitter.avatar" 
@@ -161,7 +199,17 @@
             </div>
 
             <!-- GitHub -->
-            <div *ngIf="identity.github" class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div *ngIf="identity.github" class="relative p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <button 
+                (click)="toggleBookmark('github', identity.github)"
+                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none"
+                [attr.aria-label]="isBookmarked('github') ? 'Remove bookmark' : 'Add bookmark'">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
+                     class="w-6 h-6 transition-colors"
+                     [ngClass]="isBookmarked('github') ? 'fill-gray-700 stroke-gray-700' : 'fill-none stroke-gray-400'">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                </svg>
+              </button>
               <div class="flex items-center gap-3">
                 <img 
                   *ngIf="identity.github.avatar" 
@@ -183,7 +231,17 @@
             </div>
 
             <!-- Zora -->
-            <div *ngIf="identity.zora" class="p-4 bg-pink-50 rounded-lg border border-pink-100">
+            <div *ngIf="identity.zora" class="relative p-4 bg-pink-50 rounded-lg border border-pink-100">
+              <button 
+                (click)="toggleBookmark('zora', identity.zora)"
+                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none"
+                [attr.aria-label]="isBookmarked('zora') ? 'Remove bookmark' : 'Add bookmark'">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
+                     class="w-6 h-6 transition-colors"
+                     [ngClass]="isBookmarked('zora') ? 'fill-pink-600 stroke-pink-600' : 'fill-none stroke-pink-400'">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                </svg>
+              </button>
               <div class="flex items-center gap-3">
                 <img 
                   *ngIf="identity.zora.avatar" 
@@ -205,7 +263,17 @@
             </div>
 
             <!-- Lens -->
-            <div *ngIf="identity.lens" class="p-4 bg-green-50 rounded-lg border border-green-100">
+            <div *ngIf="identity.lens" class="relative p-4 bg-green-50 rounded-lg border border-green-100">
+              <button 
+                (click)="toggleBookmark('lens', identity.lens)"
+                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none"
+                [attr.aria-label]="isBookmarked('lens') ? 'Remove bookmark' : 'Add bookmark'">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
+                     class="w-6 h-6 transition-colors"
+                     [ngClass]="isBookmarked('lens') ? 'fill-green-600 stroke-green-600' : 'fill-none stroke-green-400'">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                </svg>
+              </button>
               <div class="flex items-center gap-3">
                 <img 
                   *ngIf="identity.lens.avatar" 
@@ -227,10 +295,6 @@
             </div>
           </div>
 
-          <!-- Total Count -->
-          <!-- <div class="mt-6 text-center text-gray-500 text-sm">
-            Found {{ identity.allProfiles.length }} connected profile(s)
-          </div> -->
         </div>
       </div>
 
