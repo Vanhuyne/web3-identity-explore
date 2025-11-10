@@ -302,3 +302,9 @@
   </section>
 
 </div>
+
+<div class="p-5">
+      <button (click)="openConnectModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+        {{ address ? 'Connected: ' + shortAddress : 'Connect Wallet' }}
+      </button>
+    </div>
