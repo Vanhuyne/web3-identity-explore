@@ -1,0 +1,3 @@
+[submodule "bookmark-registry-contract/lib/forge-std"]
+	path = bookmark-registry-contract/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
