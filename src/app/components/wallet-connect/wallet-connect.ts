@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { appKit } from '../../config/wallet.config';
 import { CommonModule } from '@angular/common';
+import { Web3BookmarkService } from '../../services/web3-bookmark-service';
 // import { Web3Service } from '../../services/web3-service';
 
 @Component({
@@ -16,7 +17,8 @@ export class WalletConnect implements OnInit, OnDestroy{
 
   constructor(
     private zone: NgZone,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private bookmarkService: Web3BookmarkService 
   ) {}
 
   ngOnInit(): void {
@@ -27,20 +29,30 @@ export class WalletConnect implements OnInit, OnDestroy{
         this.address = currentAccount.address as string;
         this.isConnected = true;
         this.cdr.detectChanges();
-        console.log('Wallet already connected:', this.address);
+        // console.log('Wallet already connected:', this.address);
+
+        // ← 3a. Initialize bookmarks when wallet is connected
+        this.initializeBookmarkService(this.address);
       });
     }
 
     // ✅ Listen to account changes
-    appKit.subscribeAccount((account: any) => {
-      console.log('Wallet account subscription fired:', account);
-      // Small delay to ensure modal closes before updating UI
+   appKit.subscribeAccount((account: any) => {
+      // console.log('Wallet account subscription fired:', account);
       setTimeout(() => {
         this.zone.run(() => {
           this.address = account?.address ? (account.address as string) : null;
           this.isConnected = !!account?.address;
           this.cdr.detectChanges();
-          console.log('Wallet state updated - Connected:', this.isConnected, 'Address:', this.address);
+          // console.log('Wallet state updated - Connected:', this.isConnected, 'Address:', this.address);
+          
+          // ← 3b. Handle connection/disconnection
+          if (this.address) {
+            this.initializeBookmarkService(this.address);
+            // console.log('Bookmark service initialized for address:', this.address);
+          } else {
+            this.bookmarkService.cleanup();
+          }
         });
       }, 100);
     });
@@ -48,6 +60,8 @@ export class WalletConnect implements OnInit, OnDestroy{
 
   ngOnDestroy(): void {
     // Clean up if needed
+    // ← 3c. Cleanup on component destroy
+    this.bookmarkService.cleanup();
   }
 
   /**
@@ -55,6 +69,17 @@ export class WalletConnect implements OnInit, OnDestroy{
    */
   openConnectModal(): void {
     appKit.open();
+  }
+
+  // ← 3d. Initialize bookmark service (NEW METHOD)
+  private async initializeBookmarkService(address: string): Promise<void> {
+    try {
+      debugger
+      await this.bookmarkService.initializeWithWallet(address);
+      // console.log('Bookmark service initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize bookmark service:', error);
+    }
   }
 
   /**
@@ -67,7 +92,10 @@ export class WalletConnect implements OnInit, OnDestroy{
         this.address = null;
         this.isConnected = false;
         this.cdr.detectChanges();
-        console.log('Wallet disconnected');
+        // console.log('Wallet disconnected');
+
+        // ← 3e. Cleanup on disconnect
+        this.bookmarkService.cleanup();
       });
     } catch (error) {
       console.error('Error disconnecting wallet:', error);
@@ -90,7 +118,7 @@ export class WalletConnect implements OnInit, OnDestroy{
     
     try {
       await navigator.clipboard.writeText(this.address);
-      console.log('Address copied to clipboard');
+      // console.log('Address copied to clipboard');
       // You can add a toast notification here
     } catch (error) {
       console.error('Failed to copy address:', error);
