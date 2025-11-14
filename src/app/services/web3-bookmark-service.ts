@@ -20,9 +20,8 @@ export class Web3BookmarkService {
   
   // ✅ FIX 1: Sử dụng nhiều RPC endpoints với fallback
   private readonly RPC_ENDPOINTS = [
-    'https://alfajores-forno.celo-testnet.org',
+    'https://rpc.ankr.com/celo_sepolia',
     'https://forno.celo-sepolia.celo-testnet.org', // URL cũ của bạn
-    'https://celo-alfajores.infura.io/v3/YOUR_INFURA_KEY', // Thay YOUR_INFURA_KEY nếu có
   ];
 
   // ✅ FIX 2: Timeout và retry configuration
