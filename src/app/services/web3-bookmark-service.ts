@@ -1,6 +1,12 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { createPublicClient, createWalletClient, custom, http, fallback } from 'viem';
+import {
+  createPublicClient,
+  createWalletClient,
+  custom,
+  http,
+  fallback,
+} from 'viem';
 import { celoAlfajores } from 'viem/chains';
 
 export interface BookmarkedProfile {
@@ -12,20 +18,19 @@ export interface BookmarkedProfile {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class Web3BookmarkService {
   // Contract Configuration
-  private readonly CONTRACT_ADDRESS = '0x7CC4d42892A048DcCD337fd73D8f4849C52CDBf6';
-  
-  // ✅ FIX 1: Sử dụng nhiều RPC endpoints với fallback
+  private readonly CONTRACT_ADDRESS =
+    '0x7CC4d42892A048DcCD337fd73D8f4849C52CDBf6';
+
   private readonly RPC_ENDPOINTS = [
     'https://rpc.ankr.com/celo_sepolia',
-    'https://forno.celo-sepolia.celo-testnet.org', // URL cũ của bạn
+    'https://forno.celo-sepolia.celo-testnet.org',
   ];
 
-  // ✅ FIX 2: Timeout và retry configuration
-  private readonly REQUEST_TIMEOUT = 30000; // 30 giây
+  private readonly REQUEST_TIMEOUT = 30000;
   private readonly MAX_RETRIES = 3;
 
   // Contract ABI
@@ -38,16 +43,16 @@ export class Web3BookmarkService {
         { name: '_platform', type: 'string' },
         { name: '_username', type: 'string' },
         { name: '_avatar', type: 'string' },
-        { name: '_profileUrl', type: 'string' }
+        { name: '_profileUrl', type: 'string' },
       ],
-      outputs: []
+      outputs: [],
     },
     {
       name: 'removeBookmark',
       type: 'function',
       stateMutability: 'nonpayable',
       inputs: [{ name: '_platform', type: 'string' }],
-      outputs: []
+      outputs: [],
     },
     {
       name: 'getBookmark',
@@ -55,7 +60,7 @@ export class Web3BookmarkService {
       stateMutability: 'view',
       inputs: [
         { name: '_user', type: 'address' },
-        { name: '_platform', type: 'string' }
+        { name: '_platform', type: 'string' },
       ],
       outputs: [
         { name: 'platform', type: 'string' },
@@ -63,8 +68,8 @@ export class Web3BookmarkService {
         { name: 'avatar', type: 'string' },
         { name: 'profileUrl', type: 'string' },
         { name: 'timestamp', type: 'uint256' },
-        { name: 'exists', type: 'bool' }
-      ]
+        { name: 'exists', type: 'bool' },
+      ],
     },
     {
       name: 'getAllBookmarks',
@@ -81,24 +86,24 @@ export class Web3BookmarkService {
             { name: 'avatar', type: 'string' },
             { name: 'profileUrl', type: 'string' },
             { name: 'timestamp', type: 'uint256' },
-            { name: 'exists', type: 'bool' }
-          ]
-        }
-      ]
+            { name: 'exists', type: 'bool' },
+          ],
+        },
+      ],
     },
     {
       name: 'getUserPlatforms',
       type: 'function',
       stateMutability: 'view',
       inputs: [{ name: '_user', type: 'address' }],
-      outputs: [{ name: '', type: 'string[]' }]
+      outputs: [{ name: '', type: 'string[]' }],
     },
     {
       name: 'getBookmarkCount',
       type: 'function',
       stateMutability: 'view',
       inputs: [{ name: '_user', type: 'address' }],
-      outputs: [{ name: '', type: 'uint256' }]
+      outputs: [{ name: '', type: 'uint256' }],
     },
     {
       name: 'isBookmarked',
@@ -106,28 +111,32 @@ export class Web3BookmarkService {
       stateMutability: 'view',
       inputs: [
         { name: '_user', type: 'address' },
-        { name: '_platform', type: 'string' }
+        { name: '_platform', type: 'string' },
       ],
-      outputs: [{ name: '', type: 'bool' }]
+      outputs: [{ name: '', type: 'bool' }],
     },
     {
       name: 'clearAllBookmarks',
       type: 'function',
       stateMutability: 'nonpayable',
       inputs: [],
-      outputs: []
-    }
+      outputs: [],
+    },
   ] as const;
 
   // State management
   private bookmarksSubject = new BehaviorSubject<BookmarkedProfile[]>([]);
-  public bookmarks$: Observable<BookmarkedProfile[]> = this.bookmarksSubject.asObservable();
+  public bookmarks$: Observable<BookmarkedProfile[]> =
+    this.bookmarksSubject.asObservable();
 
   private loadingSubject = new BehaviorSubject<boolean>(false);
   public loading$: Observable<boolean> = this.loadingSubject.asObservable();
 
   private errorSubject = new BehaviorSubject<string | null>(null);
   public error$: Observable<string | null> = this.errorSubject.asObservable();
+
+  private addressSubject = new BehaviorSubject<`0x${string}` | null>(null);
+  public address$ = this.addressSubject.asObservable();
 
   // Viem clients
   private publicClient: any = null;
@@ -141,30 +150,31 @@ export class Web3BookmarkService {
   }
 
   /**
-   * ✅ FIX 3: Initialize với fallback transport và timeout
+   * ✅ NO CACHE: Initialize with cacheTime disabled
    */
   private initializePublicClient(): void {
     try {
-      // Tạo nhiều transport với timeout
-      const transports = this.RPC_ENDPOINTS.map(url => 
+      const transports = this.RPC_ENDPOINTS.map((url) =>
         http(url, {
           timeout: this.REQUEST_TIMEOUT,
           retryCount: this.MAX_RETRIES,
-          retryDelay: 1000, // 1 giây giữa các retry
+          retryDelay: 1000,
         })
       );
 
       this.publicClient = createPublicClient({
         chain: celoAlfajores,
         transport: fallback(transports, {
-          rank: false, // Thử theo thứ tự
+          rank: false,
         }),
         batch: {
-          multicall: true, // Bật batch requests
+          multicall: true,
         },
+        // ✅ DISABLE CACHING
+        cacheTime: 0, // Don't cache any responses
       });
 
-      console.log('✅ Public client initialized with fallback RPC endpoints');
+      console.log('✅ Public client initialized with NO CACHE');
     } catch (error) {
       console.error('❌ Error initializing public client:', error);
     }
@@ -182,19 +192,18 @@ export class Web3BookmarkService {
     try {
       this.loadingSubject.next(true);
       this.currentAddress = address as `0x${string}`;
+      this.addressSubject.next(this.currentAddress);
 
-      // Check if ethereum provider exists
       if (typeof window.ethereum === 'undefined') {
         throw new Error('Ethereum provider not found');
       }
 
-      // ✅ FIX 4: Initialize wallet client (custom transport không có timeout option)
       this.walletClient = createWalletClient({
         chain: celoAlfajores,
-        transport: custom(window.ethereum as any)
+        transport: custom(window.ethereum as any),
       });
 
-      // Load user's bookmarks với retry
+      // Load user's bookmarks
       await this.loadBookmarksFromContract(this.currentAddress);
 
       console.log('✅ Web3 initialized successfully for address:', address);
@@ -215,13 +224,12 @@ export class Web3BookmarkService {
     this.currentAddress = null;
     this.bookmarksSubject.next([]);
     this.errorSubject.next(null);
+
+    this.addressSubject.next(null); // <-- new
   }
 
-  /**
-   * ✅ FIX 5: Load bookmarks với retry logic và error handling tốt hơn
-   */
   private async loadBookmarksFromContract(
-    address: `0x${string}`, 
+    address: `0x${string}`,
     retryCount = 0
   ): Promise<void> {
     try {
@@ -231,23 +239,29 @@ export class Web3BookmarkService {
         throw new Error('Public client not initialized');
       }
 
-      console.log(`🔄 Loading bookmarks (attempt ${retryCount + 1}/${this.MAX_RETRIES + 1})...`);
+      console.log(
+        `🔄 Loading bookmarks (attempt ${retryCount + 1}/${
+          this.MAX_RETRIES + 1
+        })...`
+      );
 
-      const bookmarksData = await this.publicClient.readContract({
+      // ✅ Use blockTag: 'latest' to force fresh data
+      const bookmarksData = (await this.publicClient.readContract({
         address: this.CONTRACT_ADDRESS,
         abi: this.CONTRACT_ABI,
         functionName: 'getAllBookmarks',
-        args: [address]
-      }) as any[];
+        args: [address],
+        blockTag: 'latest', // Force reading from latest block
+      })) as any[];
 
       const bookmarks: BookmarkedProfile[] = bookmarksData
-        .filter((b: any) => b.exists) // Chỉ lấy bookmarks còn tồn tại
+        .filter((b: any) => b.exists)
         .map((b: any) => ({
           platform: b.platform,
           username: b.username,
           avatar: b.avatar || undefined,
           url: b.profileUrl,
-          bookmarkedAt: Number(b.timestamp) * 1000
+          bookmarkedAt: Number(b.timestamp) * 1000,
         }));
 
       this.bookmarksSubject.next(bookmarks);
@@ -255,18 +269,19 @@ export class Web3BookmarkService {
 
       console.log('✅ Loaded bookmarks for address', address, bookmarks);
     } catch (error: any) {
-      console.error(`❌ Error loading bookmarks (attempt ${retryCount + 1}):`, error);
+      console.error(
+        `❌ Error loading bookmarks (attempt ${retryCount + 1}):`,
+        error
+      );
 
-      // ✅ FIX 6: Retry logic
       if (retryCount < this.MAX_RETRIES) {
         console.log(`⏳ Retrying in ${(retryCount + 1) * 2} seconds...`);
-        await this.delay((retryCount + 1) * 2000); // Exponential backoff
+        await this.delay((retryCount + 1) * 2000);
         return this.loadBookmarksFromContract(address, retryCount + 1);
       }
 
-      // Nếu hết retry, set empty array thay vì throw
       this.bookmarksSubject.next([]);
-      
+
       const errorMessage = this.getReadableError(error);
       this.errorSubject.next(errorMessage);
       console.error('❌ Final error:', errorMessage);
@@ -275,18 +290,15 @@ export class Web3BookmarkService {
     }
   }
 
-  /**
-   * ✅ FIX 7: Helper để delay
-   */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  /**
-   * ✅ FIX 8: Convert error thành message dễ hiểu
-   */
   private getReadableError(error: any): string {
-    if (error.message?.includes('timeout') || error.message?.includes('took too long')) {
+    if (
+      error.message?.includes('timeout') ||
+      error.message?.includes('took too long')
+    ) {
       return 'Network timeout. Please check your connection and try again.';
     }
     if (error.message?.includes('fetch failed')) {
@@ -299,7 +311,7 @@ export class Web3BookmarkService {
   }
 
   /**
-   * Refresh bookmarks for current user
+   * ✅ NO CACHE: Refresh bookmarks with fresh data
    */
   async refreshBookmarks(): Promise<void> {
     if (this.currentAddress) {
@@ -310,152 +322,162 @@ export class Web3BookmarkService {
   /**
    * Add a bookmark to the blockchain
    */
-  async addBookmark(platform: string, profile: any): Promise<void> {
-    if (!this.walletClient || !this.currentAddress) {
-      throw new Error('Wallet not connected. Please connect your wallet first.');
-    }
+  // async addBookmark(platform: string, profile: any): Promise<void> {
+  //   if (!this.walletClient || !this.currentAddress) {
+  //     throw new Error(
+  //       'Wallet not connected. Please connect your wallet first.'
+  //     );
+  //   }
 
-    try {
-      this.loadingSubject.next(true);
-      this.errorSubject.next(null);
+  //   try {
+  //     this.loadingSubject.next(true);
+  //     this.errorSubject.next(null);
 
-      const username = profile.username || profile.handle || 'Unknown';
-      const avatar = profile.avatar || '';
-      const url = profile.url || '';
+  //     const username = profile.username || profile.handle || 'Unknown';
+  //     const avatar = profile.avatar || '';
+  //     const url = profile.url || '';
 
-      // Check if already bookmarked
-      if (this.publicClient) {
-        const isBookmarked = await this.publicClient.readContract({
-          address: this.CONTRACT_ADDRESS,
-          abi: this.CONTRACT_ABI,
-          functionName: 'isBookmarked',
-          args: [this.currentAddress, platform]
-        });
+  //     // Check if already bookmarked (with fresh data)
+  //     if (this.publicClient) {
+  //       const isBookmarked = await this.publicClient.readContract({
+  //         address: this.CONTRACT_ADDRESS,
+  //         abi: this.CONTRACT_ABI,
+  //         functionName: 'isBookmarked',
+  //         args: [this.currentAddress, platform],
+  //         blockTag: 'latest', // Force fresh check
+  //       });
 
-        if (isBookmarked) {
-          throw new Error(`${platform} is already bookmarked`);
-        }
-      }
+  //       if (isBookmarked) {
+  //         throw new Error(`${platform} is already bookmarked`);
+  //       }
+  //     }
 
-      // Send transaction
-      const hash = await this.walletClient.writeContract({
-        address: this.CONTRACT_ADDRESS,
-        abi: this.CONTRACT_ABI,
-        functionName: 'addBookmark',
-        args: [platform, username, avatar, url],
-        account: this.currentAddress,
-        chain: celoAlfajores
-      });
+  //     // Send transaction
+  //     const hash = await this.walletClient.writeContract({
+  //       address: this.CONTRACT_ADDRESS,
+  //       abi: this.CONTRACT_ABI,
+  //       functionName: 'addBookmark',
+  //       args: [platform, username, avatar, url],
+  //       account: this.currentAddress,
+  //       chain: celoAlfajores,
+  //     });
 
-      console.log('📤 Transaction sent:', hash);
+  //     console.log('📤 Transaction sent:', hash);
 
-      // Wait for confirmation
-      if (this.publicClient) {
-        const receipt = await this.publicClient.waitForTransactionReceipt({ 
-          hash,
-          timeout: this.REQUEST_TIMEOUT 
-        });
-        console.log('✅ Transaction confirmed:', receipt.transactionHash);
-      }
+  //     // Wait for confirmation
+  //     if (this.publicClient) {
+  //       const receipt = await this.publicClient.waitForTransactionReceipt({
+  //         hash,
+  //         timeout: this.REQUEST_TIMEOUT,
+  //       });
+  //       console.log('✅ Transaction confirmed:', receipt.transactionHash);
+  //     }
 
-      // Reload bookmarks
-      await this.loadBookmarksFromContract(this.currentAddress);
+  //     // ✅ Add small delay to ensure blockchain state is updated
+  //     await this.delay(1000);
 
-    } catch (error: any) {
-      console.error('❌ Error adding bookmark:', error);
-      const errorMessage = this.getReadableError(error);
-      this.errorSubject.next(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      this.loadingSubject.next(false);
-    }
-  }
+  //     // Reload bookmarks with fresh data
+  //     await this.loadBookmarksFromContract(this.currentAddress);
+  //   } catch (error: any) {
+  //     console.error('❌ Error adding bookmark:', error);
+  //     const errorMessage = this.getReadableError(error);
+  //     this.errorSubject.next(errorMessage);
+  //     throw new Error(errorMessage);
+  //   } finally {
+  //     this.loadingSubject.next(false);
+  //   }
+  // }
 
   /**
    * Remove a bookmark from the blockchain
    */
-  async removeBookmark(platform: string): Promise<void> {
-    if (!this.walletClient || !this.currentAddress) {
-      throw new Error('Wallet not connected. Please connect your wallet first.');
-    }
+  // async removeBookmark(platform: string): Promise<void> {
+  //   if (!this.walletClient || !this.currentAddress) {
+  //     throw new Error(
+  //       'Wallet not connected. Please connect your wallet first.'
+  //     );
+  //   }
 
-    try {
-      this.loadingSubject.next(true);
-      this.errorSubject.next(null);
+  //   try {
+  //     this.loadingSubject.next(true);
+  //     this.errorSubject.next(null);
 
-      const hash = await this.walletClient.writeContract({
-        address: this.CONTRACT_ADDRESS,
-        abi: this.CONTRACT_ABI,
-        functionName: 'removeBookmark',
-        args: [platform],
-        account: this.currentAddress,
-        chain: celoAlfajores
-      });
+  //     const hash = await this.walletClient.writeContract({
+  //       address: this.CONTRACT_ADDRESS,
+  //       abi: this.CONTRACT_ABI,
+  //       functionName: 'removeBookmark',
+  //       args: [platform],
+  //       account: this.currentAddress,
+  //       chain: celoAlfajores,
+  //     });
 
-      console.log('📤 Transaction sent:', hash);
+  //     console.log('📤 Transaction sent:', hash);
 
-      if (this.publicClient) {
-        const receipt = await this.publicClient.waitForTransactionReceipt({ 
-          hash,
-          timeout: this.REQUEST_TIMEOUT 
-        });
-        console.log('✅ Transaction confirmed:', receipt.transactionHash);
-      }
+  //     if (this.publicClient) {
+  //       const receipt = await this.publicClient.waitForTransactionReceipt({
+  //         hash,
+  //         timeout: this.REQUEST_TIMEOUT,
+  //       });
+  //       console.log('✅ Transaction confirmed:', receipt.transactionHash);
+  //     }
 
-      await this.loadBookmarksFromContract(this.currentAddress);
+  //     // ✅ Add small delay
+  //     await this.delay(1000);
 
-    } catch (error: any) {
-      console.error('❌ Error removing bookmark:', error);
-      const errorMessage = this.getReadableError(error);
-      this.errorSubject.next(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      this.loadingSubject.next(false);
-    }
-  }
+  //     await this.loadBookmarksFromContract(this.currentAddress);
+  //   } catch (error: any) {
+  //     console.error('❌ Error removing bookmark:', error);
+  //     const errorMessage = this.getReadableError(error);
+  //     this.errorSubject.next(errorMessage);
+  //     throw new Error(errorMessage);
+  //   } finally {
+  //     this.loadingSubject.next(false);
+  //   }
+  // }
 
   /**
    * Toggle bookmark
    */
-  async toggleBookmark(platform: string, profile: any): Promise<void> {
-    const isBookmarked = await this.isBookmarked(platform);
+  // async toggleBookmark(platform: string, profile: any): Promise<void> {
+  //   const isBookmarked = await this.isBookmarked(platform);
 
-    if (isBookmarked) {
-      await this.removeBookmark(platform);
-    } else {
-      await this.addBookmark(platform, profile);
-    }
-  }
+  //   if (isBookmarked) {
+  //     await this.removeBookmark(platform);
+  //   } else {
+  //     await this.addBookmark(platform, profile);
+  //   }
+  // }
 
   /**
-   * Check if a platform is bookmarked
+   * ✅ NO CACHE: Check if a platform is bookmarked with fresh data
    */
-  async isBookmarked(platform: string): Promise<boolean> {
-    if (!this.currentAddress || !this.publicClient) {
-      return false;
-    }
+  // async isBookmarked(platform: string): Promise<boolean> {
+  //   if (!this.currentAddress || !this.publicClient) {
+  //     return false;
+  //   }
 
-    try {
-      const result = await this.publicClient.readContract({
-        address: this.CONTRACT_ADDRESS,
-        abi: this.CONTRACT_ABI,
-        functionName: 'isBookmarked',
-        args: [this.currentAddress, platform]
-      });
+  //   try {
+  //     const result = await this.publicClient.readContract({
+  //       address: this.CONTRACT_ADDRESS,
+  //       abi: this.CONTRACT_ABI,
+  //       functionName: 'isBookmarked',
+  //       args: [this.currentAddress, platform],
+  //       blockTag: 'latest', // Force fresh check
+  //     });
 
-      return result as boolean;
-    } catch (error) {
-      console.error('❌ Error checking bookmark status:', error);
-      return false;
-    }
-  }
+  //     return result as boolean;
+  //   } catch (error) {
+  //     console.error('❌ Error checking bookmark status:', error);
+  //     return false;
+  //   }
+  // }
 
   /**
    * Check if a platform is bookmarked (synchronous)
    */
-  isBookmarkedSync(platform: string): boolean {
-    return this.bookmarksSubject.value.some(b => b.platform === platform);
-  }
+  // isBookmarkedSync(platform: string): boolean {
+  //   return this.bookmarksSubject.value.some((b) => b.platform === platform);
+  // }
 
   /**
    * Get all bookmarks
@@ -467,51 +489,52 @@ export class Web3BookmarkService {
   /**
    * Get bookmark by platform
    */
-  getBookmark(platform: string): BookmarkedProfile | undefined {
-    return this.bookmarksSubject.value.find(b => b.platform === platform);
-  }
+  // getBookmark(platform: string): BookmarkedProfile | undefined {
+  //   return this.bookmarksSubject.value.find((b) => b.platform === platform);
+  // }
 
   /**
    * Clear all bookmarks
    */
-  async clearAllBookmarks(): Promise<void> {
-    if (!this.walletClient || !this.currentAddress) {
-      throw new Error('Wallet not connected. Please connect your wallet first.');
-    }
+  // async clearAllBookmarks(): Promise<void> {
+  //   if (!this.walletClient || !this.currentAddress) {
+  //     throw new Error(
+  //       'Wallet not connected. Please connect your wallet first.'
+  //     );
+  //   }
 
-    try {
-      this.loadingSubject.next(true);
-      this.errorSubject.next(null);
+  //   try {
+  //     this.loadingSubject.next(true);
+  //     this.errorSubject.next(null);
 
-      const hash = await this.walletClient.writeContract({
-        address: this.CONTRACT_ADDRESS,
-        abi: this.CONTRACT_ABI,
-        functionName: 'clearAllBookmarks',
-        account: this.currentAddress,
-        chain: celoAlfajores
-      });
+  //     const hash = await this.walletClient.writeContract({
+  //       address: this.CONTRACT_ADDRESS,
+  //       abi: this.CONTRACT_ABI,
+  //       functionName: 'clearAllBookmarks',
+  //       account: this.currentAddress,
+  //       chain: celoAlfajores,
+  //     });
 
-      console.log('📤 Transaction sent:', hash);
+  //     console.log('📤 Transaction sent:', hash);
 
-      if (this.publicClient) {
-        const receipt = await this.publicClient.waitForTransactionReceipt({ 
-          hash,
-          timeout: this.REQUEST_TIMEOUT 
-        });
-        console.log('✅ Transaction confirmed:', receipt.transactionHash);
-      }
+  //     if (this.publicClient) {
+  //       const receipt = await this.publicClient.waitForTransactionReceipt({
+  //         hash,
+  //         timeout: this.REQUEST_TIMEOUT,
+  //       });
+  //       console.log('✅ Transaction confirmed:', receipt.transactionHash);
+  //     }
 
-      this.bookmarksSubject.next([]);
-
-    } catch (error: any) {
-      console.error('❌ Error clearing bookmarks:', error);
-      const errorMessage = this.getReadableError(error);
-      this.errorSubject.next(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      this.loadingSubject.next(false);
-    }
-  }
+  //     this.bookmarksSubject.next([]);
+  //   } catch (error: any) {
+  //     console.error('❌ Error clearing bookmarks:', error);
+  //     const errorMessage = this.getReadableError(error);
+  //     this.errorSubject.next(errorMessage);
+  //     throw new Error(errorMessage);
+  //   } finally {
+  //     this.loadingSubject.next(false);
+  //   }
+  // }
 
   /**
    * Get bookmarks count
@@ -521,7 +544,7 @@ export class Web3BookmarkService {
   }
 
   /**
-   * Get bookmarks for any address (read-only)
+   * ✅ NO CACHE: Get bookmarks for any address with fresh data
    */
   async getBookmarksForAddress(address: string): Promise<BookmarkedProfile[]> {
     try {
@@ -529,12 +552,13 @@ export class Web3BookmarkService {
         throw new Error('Public client not initialized');
       }
 
-      const bookmarksData = await this.publicClient.readContract({
+      const bookmarksData = (await this.publicClient.readContract({
         address: this.CONTRACT_ADDRESS,
         abi: this.CONTRACT_ABI,
         functionName: 'getAllBookmarks',
-        args: [address as `0x${string}`]
-      }) as any[];
+        args: [address as `0x${string}`],
+        blockTag: 'latest', // Force fresh data
+      })) as any[];
 
       return bookmarksData
         .filter((b: any) => b.exists)
@@ -543,7 +567,7 @@ export class Web3BookmarkService {
           username: b.username,
           avatar: b.avatar || undefined,
           url: b.profileUrl,
-          bookmarkedAt: Number(b.timestamp) * 1000
+          bookmarkedAt: Number(b.timestamp) * 1000,
         }));
     } catch (error) {
       console.error('❌ Error loading bookmarks for address:', error);
@@ -565,6 +589,3 @@ export class Web3BookmarkService {
     return !!this.walletClient && !!this.currentAddress;
   }
 }
-
-// No need to extend Window interface - already declared in appkit.d.ts
-// Just use 'as any' when needed

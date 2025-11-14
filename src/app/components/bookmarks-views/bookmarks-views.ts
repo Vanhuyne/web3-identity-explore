@@ -1,7 +1,9 @@
 import { Component } from '@angular/core';
-import { BookmarkService } from '../../services/bookmark-service';
+import { BookmarkedProfile } from '../../services/bookmark-service';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { filter, first, firstValueFrom, Observable, Subscription } from 'rxjs';
+import { Web3BookmarkService } from '../../services/web3-bookmark-service';
 
 @Component({
   selector: 'app-bookmarks-views',
@@ -11,40 +13,20 @@ import { RouterModule } from '@angular/router';
   styleUrl: './bookmarks-views.css',
 })
 export class BookmarksViews {
-  constructor(public bookmarkService: BookmarkService) {}
+   bookmarks$: Observable<BookmarkedProfile[]>;
+  loading$: Observable<boolean>;
+  error$: Observable<string | null>;
 
-  /**
-   * Remove a specific bookmark
-   */
-  removeBookmark(platform: string): void {
-    this.bookmarkService.removeBookmark(platform);
+  constructor(private bookmarkService: Web3BookmarkService) {
+    this.bookmarks$ = this.bookmarkService.bookmarks$;
+    this.loading$ = this.bookmarkService.loading$;
+    this.error$ = this.bookmarkService.error$;
   }
 
-  /**
-   * Clear all bookmarks with confirmation
-   */
-  clearAllBookmarks(): void {
-    this.bookmarkService.clearAllBookmarks();
-    console.log('✓ All bookmarks cleared');
-    // Or show a toast notification here
-  }
-
-  /**
-   * Format timestamp to relative time
-   */
-  formatDate(timestamp: number): string {
-    const now = Date.now();
-    const diff = now - timestamp;
-
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    if (days < 7) return `${days}d ago`;
-
-    return new Date(timestamp).toLocaleDateString();
+  ngOnInit() {
+    // Tự load khi component render
+    if (this.bookmarkService.isInitialized()) {
+      this.bookmarkService.refreshBookmarks();
+    }
   }
 }

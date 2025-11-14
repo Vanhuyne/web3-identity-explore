@@ -1,134 +1,17 @@
-<!-- Bookmarks View Component Template -->
-<div class="min-h-screen bg-gradient-to-b from-[#e9f8fd] to-[#e9f1ff] py-12 px-6">
-  <div class="max-w-4xl mx-auto">
-    
-    <!-- Back Button -->
-    <a [routerLink]="['/']" 
-       class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6 transition cursor-pointer group">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
-           class="w-5 h-5 group-hover:-translate-x-1 transition-transform">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
-      </svg>
-      <span class="font-semibold">Back to Search</span>
-    </a>
-    
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900">My Bookmarks</h1>
-        <p class="text-gray-600 mt-1">
-          {{ (bookmarkService.bookmarks$ | async)?.length || 0 }} saved identities
-        </p>
-      </div>
-      
-      <button 
-        *ngIf="(bookmarkService.bookmarks$ | async)?.length"
-        (click)="clearAllBookmarks()"
-        class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition">
-        Clear All
-      </button>
-    </div>
+<div *ngIf="loading$ | async" class="loading">Loading...</div>
 
-    <!-- Empty State -->
-    <div *ngIf="!(bookmarkService.bookmarks$ | async)?.length" 
-         class="text-center py-16">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
-           class="w-24 h-24 mx-auto text-gray-300 mb-4">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
-      </svg>
-      <h2 class="text-xl font-semibold text-gray-700 mb-2">No bookmarks yet</h2>
-      <p class="text-gray-500 mb-6">Start bookmarking identities to save them here</p>
-      <a [routerLink]="['/']" 
-         class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-        Search Identities
-      </a>
-    </div>
-
-    <!-- Bookmarks Grid -->
-    <div *ngIf="(bookmarkService.bookmarks$ | async)?.length" 
-         class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      
-      <div *ngFor="let bookmark of bookmarkService.bookmarks$ | async" 
-           class="relative p-4 rounded-lg border transition-all hover:shadow-lg"
-           [ngClass]="{
-             'bg-purple-50 border-purple-100': bookmark.platform === 'farcaster',
-             'bg-blue-50 border-blue-100': bookmark.platform === 'ens',
-             'bg-sky-50 border-sky-100': bookmark.platform === 'twitter',
-             'bg-gray-50 border-gray-200': bookmark.platform === 'github',
-             'bg-pink-50 border-pink-100': bookmark.platform === 'zora',
-             'bg-green-50 border-green-100': bookmark.platform === 'lens'
-           }">
-        
-        <!-- Remove Bookmark Button -->
-        <button 
-          (click)="removeBookmark(bookmark.platform)"
-          class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none"
-          aria-label="Remove bookmark">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" 
-               class="w-6 h-6 transition-colors"
-               [ngClass]="{
-                 'fill-purple-600 stroke-purple-600': bookmark.platform === 'farcaster',
-                 'fill-blue-600 stroke-blue-600': bookmark.platform === 'ens',
-                 'fill-sky-600 stroke-sky-600': bookmark.platform === 'twitter',
-                 'fill-gray-700 stroke-gray-700': bookmark.platform === 'github',
-                 'fill-pink-600 stroke-pink-600': bookmark.platform === 'zora',
-                 'fill-green-600 stroke-green-600': bookmark.platform === 'lens'
-               }">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
-          </svg>
-        </button>
-
-        <!-- Profile Info -->
-        <div class="flex items-center gap-3">
-          <img 
-            *ngIf="bookmark.avatar" 
-            [src]="bookmark.avatar" 
-            [alt]="bookmark.username"
-            class="w-12 h-12 rounded-full">
-          <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center"
-               *ngIf="!bookmark.avatar">
-            <span class="text-gray-500 text-xl font-bold">
-              {{ bookmark.username.charAt(0).toUpperCase() }}
-            </span>
-          </div>
-          
-          <div class="flex-1 pr-8">
-            <div class="flex items-center gap-2 mb-1">
-              <span class="text-xs font-semibold uppercase tracking-wide"
-                    [ngClass]="{
-                      'text-purple-900': bookmark.platform === 'farcaster',
-                      'text-blue-900': bookmark.platform === 'ens',
-                      'text-sky-900': bookmark.platform === 'twitter',
-                      'text-gray-900': bookmark.platform === 'github',
-                      'text-pink-900': bookmark.platform === 'zora',
-                      'text-green-900': bookmark.platform === 'lens'
-                    }">
-                {{ bookmark.platform }}
-              </span>
-            </div>
-            <p class="text-gray-700 font-medium truncate">{{ bookmark.username }}</p>
-            <div class="flex items-center gap-3 mt-2">
-              <a [href]="bookmark.url" 
-                 target="_blank" 
-                 class="text-xs hover:underline"
-                 [ngClass]="{
-                   'text-purple-600': bookmark.platform === 'farcaster',
-                   'text-blue-600': bookmark.platform === 'ens',
-                   'text-sky-600': bookmark.platform === 'twitter',
-                   'text-gray-700': bookmark.platform === 'github',
-                   'text-pink-600': bookmark.platform === 'zora',
-                   'text-green-600': bookmark.platform === 'lens'
-                 }">
-                View Profile →
-              </a>
-              <span class="text-xs text-gray-400">
-                {{ formatDate(bookmark.bookmarkedAt) }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
+<div *ngIf="error$ | async as error" class="error">
+  {{ error }}
 </div>
+
+<ul *ngIf="bookmarks$ | async as bookmarks">
+  <li *ngFor="let b of bookmarks">
+    <img [src]="b.avatar" width="32" height="32" *ngIf="b.avatar">
+    <strong>{{ b.platform }}</strong> — {{ b.username }}  
+    <a [href]="b.url" target="_blank">View</a>
+  </li>
+
+  <li *ngIf="bookmarks.length === 0">
+    No bookmarks found.
+  </li>
+</ul>

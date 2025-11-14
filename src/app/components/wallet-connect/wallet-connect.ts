@@ -16,7 +16,7 @@ export class WalletConnect implements OnInit, OnDestroy {
   isConnected: boolean = false;
   
   // ✅ Thêm subscription để quản lý
-  private bookmarkSubscription?: Subscription;
+  // private bookmarkSubscription?: Subscription;
 
   constructor(
     private zone: NgZone,
@@ -26,19 +26,21 @@ export class WalletConnect implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // ✅ Subscribe để log bookmarks mỗi khi có thay đổi
-    this.subscribeToBookmarks();
+    // this.subscribeToBookmarks();
 
     // Get current session when component initializes
     const currentAccount = appKit.getAccount();
+    console.log(currentAccount + 'sss ');
+    
     if (currentAccount?.address) {
       this.zone.run(() => {
         this.address = currentAccount.address as string;
         this.isConnected = true;
         this.cdr.detectChanges();
-        console.log('Wallet already connected:', this.address);
+        // console.log('Wallet already connected:', this.address);
 
         // Initialize bookmarks when wallet is connected
-        this.initializeBookmarkService(this.address);
+        //this.initializeBookmarkService(this.address);
       });
     }
 
@@ -50,12 +52,12 @@ export class WalletConnect implements OnInit, OnDestroy {
           this.address = account?.address ? (account.address as string) : null;
           this.isConnected = !!account?.address;
           this.cdr.detectChanges();
-          console.log('Wallet state updated - Connected:', this.isConnected, 'Address:', this.address);
+          // console.log('Wallet state updated - Connected:', this.isConnected, 'Address:', this.address);
           
           // Handle connection/disconnection
           if (this.address) {
             this.initializeBookmarkService(this.address);
-            console.log('Bookmark service initialized for address:', this.address);
+            // console.log('Bookmark service initialized for address:', this.address);
           } else {
             this.bookmarkService.cleanup();
           }
@@ -66,50 +68,50 @@ export class WalletConnect implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     // ✅ Cleanup subscriptions
-    if (this.bookmarkSubscription) {
-      this.bookmarkSubscription.unsubscribe();
-    }
-    this.bookmarkService.cleanup();
+    // if (this.bookmarkSubscription) {
+    //   this.bookmarkSubscription.unsubscribe();
+    // }
+    // this.bookmarkService.cleanup();
   }
 
   /**
    * ✅ Subscribe to bookmarks observable to log changes
    */
-  private subscribeToBookmarks(): void {
-    this.bookmarkSubscription = this.bookmarkService.bookmarks$.subscribe({
-      next: (bookmarks) => {
-        console.log('📚 Bookmarks Updated:', bookmarks);
-        console.log('📊 Total Bookmarks:', bookmarks.length);
+  // private subscribeToBookmarks(): void {
+  //   this.bookmarkSubscription = this.bookmarkService.bookmarks$.subscribe({
+  //     next: (bookmarks) => {
+  //       console.log('📚 Bookmarks Updated:', bookmarks);
+  //       console.log('📊 Total Bookmarks:', bookmarks.length);
         
-        // Log chi tiết từng bookmark
-        if (bookmarks.length > 0) {
-          console.table(bookmarks.map(b => ({
-            Platform: b.platform,
-            Username: b.username,
-            URL: b.url,
-            BookmarkedAt: new Date(b.bookmarkedAt).toLocaleString()
-          })));
-        } else {
-          console.log('ℹ️ No bookmarks found for this address');
-        }
-      },
-      error: (error) => {
-        console.error('❌ Error loading bookmarks:', error);
-      }
-    });
+  //       // Log chi tiết từng bookmark
+  //       if (bookmarks.length > 0) {
+  //         console.table(bookmarks.map(b => ({
+  //           Platform: b.platform,
+  //           Username: b.username,
+  //           URL: b.url,
+  //           BookmarkedAt: new Date(b.bookmarkedAt).toLocaleString()
+  //         })));
+  //       } else {
+  //         console.log('ℹ️ No bookmarks found for this address');
+  //       }
+  //     },
+  //     error: (error) => {
+  //       console.error('❌ Error loading bookmarks:', error);
+  //     }
+  //   });
 
-    // ✅ Subscribe to loading state
-    this.bookmarkService.loading$.subscribe(isLoading => {
-      console.log('⏳ Bookmarks Loading:', isLoading);
-    });
+  //   // ✅ Subscribe to loading state
+  //   this.bookmarkService.loading$.subscribe(isLoading => {
+  //     console.log('⏳ Bookmarks Loading:', isLoading);
+  //   });
 
-    // ✅ Subscribe to errors
-    this.bookmarkService.error$.subscribe(error => {
-      if (error) {
-        console.error('⚠️ Bookmark Error:', error);
-      }
-    });
-  }
+  //   // ✅ Subscribe to errors
+  //   this.bookmarkService.error$.subscribe(error => {
+  //     if (error) {
+  //       console.error('⚠️ Bookmark Error:', error);
+  //     }
+  //   });
+  // }
 
   /**
    * Open the wallet connection modal
@@ -125,14 +127,14 @@ export class WalletConnect implements OnInit, OnDestroy {
     try {
       console.log('🚀 Initializing bookmark service for:', address);
       await this.bookmarkService.initializeWithWallet(address);
-      console.log('✅ Bookmark service initialized successfully');
+      // console.log('✅ Bookmark service initialized successfully');
       
       // ✅ Log thêm thông tin chi tiết
       const count = this.bookmarkService.getBookmarksCount();
-      console.log(`📊 Found ${count} bookmarks for this address`);
+      // console.log(`📊 Found ${count} bookmarks for this address`);
       
     } catch (error) {
-      console.error('❌ Failed to initialize bookmark service:', error);
+      // console.error('❌ Failed to initialize bookmark service:', error);
     }
   }
 
@@ -179,8 +181,8 @@ export class WalletConnect implements OnInit, OnDestroy {
   }
 
   // ✅ Thêm method để refresh và log bookmarks bất cứ lúc nào
-  async refreshAndLogBookmarks(): Promise<void> {
-    console.log('🔄 Manually refreshing bookmarks...');
-    await this.bookmarkService.refreshBookmarks();
-  }
+  // async refreshAndLogBookmarks(): Promise<void> {
+  //   // console.log('🔄 Manually refreshing bookmarks...');
+  //   await this.bookmarkService.refreshBookmarks();
+  // }
 }
