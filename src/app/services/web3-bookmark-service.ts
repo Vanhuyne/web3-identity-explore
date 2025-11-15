@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Injectable, OnDestroy } from '@angular/core';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import {
   createPublicClient,
   createWalletClient,
@@ -7,7 +7,7 @@ import {
   http,
   fallback,
 } from 'viem';
-import { celoAlfajores } from 'viem/chains';
+import { baseSepolia } from 'viem/chains';
 
 export interface BookmarkedProfile {
   platform: string;
@@ -17,23 +17,34 @@ export interface BookmarkedProfile {
   bookmarkedAt: number;
 }
 
+interface ContractBookmark {
+  platform: string;
+  username: string;
+  avatar: string;
+  profileUrl: string;
+  timestamp: bigint;
+  exists: boolean;
+}
+
 @Injectable({
   providedIn: 'root',
 })
-export class Web3BookmarkService {
+export class Web3BookmarkService implements OnDestroy {
   // Contract Configuration
   private readonly CONTRACT_ADDRESS =
-    '0x7CC4d42892A048DcCD337fd73D8f4849C52CDBf6';
+    '0x56556fE7F6274b0d6748b759cEcA3E113218068C' as const;
 
   private readonly RPC_ENDPOINTS = [
-    'https://rpc.ankr.com/celo_sepolia',
-    'https://forno.celo-sepolia.celo-testnet.org',
-  ];
+    'https://base-sepolia.drpc.org',
+    'https://base-sepolia-rpc.publicnode.com',
+  ] as const;
 
   private readonly REQUEST_TIMEOUT = 30000;
   private readonly MAX_RETRIES = 3;
+  private readonly RETRY_DELAY_BASE = 2000;
+  private readonly POST_TX_DELAY = 1000;
 
-  // Contract ABI
+  // Contract ABI (typed for better type safety)
   private readonly CONTRACT_ABI = [
     {
       name: 'addBookmark',
@@ -53,23 +64,6 @@ export class Web3BookmarkService {
       stateMutability: 'nonpayable',
       inputs: [{ name: '_platform', type: 'string' }],
       outputs: [],
-    },
-    {
-      name: 'getBookmark',
-      type: 'function',
-      stateMutability: 'view',
-      inputs: [
-        { name: '_user', type: 'address' },
-        { name: '_platform', type: 'string' },
-      ],
-      outputs: [
-        { name: 'platform', type: 'string' },
-        { name: 'username', type: 'string' },
-        { name: 'avatar', type: 'string' },
-        { name: 'profileUrl', type: 'string' },
-        { name: 'timestamp', type: 'uint256' },
-        { name: 'exists', type: 'bool' },
-      ],
     },
     {
       name: 'getAllBookmarks',
@@ -92,20 +86,6 @@ export class Web3BookmarkService {
       ],
     },
     {
-      name: 'getUserPlatforms',
-      type: 'function',
-      stateMutability: 'view',
-      inputs: [{ name: '_user', type: 'address' }],
-      outputs: [{ name: '', type: 'string[]' }],
-    },
-    {
-      name: 'getBookmarkCount',
-      type: 'function',
-      stateMutability: 'view',
-      inputs: [{ name: '_user', type: 'address' }],
-      outputs: [{ name: '', type: 'uint256' }],
-    },
-    {
       name: 'isBookmarked',
       type: 'function',
       stateMutability: 'view',
@@ -124,33 +104,50 @@ export class Web3BookmarkService {
     },
   ] as const;
 
-  // State management
-  private bookmarksSubject = new BehaviorSubject<BookmarkedProfile[]>([]);
-  public bookmarks$: Observable<BookmarkedProfile[]> =
+  // State management with proper typing
+  private readonly bookmarksSubject = new BehaviorSubject<BookmarkedProfile[]>(
+    []
+  );
+  public readonly bookmarks$: Observable<BookmarkedProfile[]> =
     this.bookmarksSubject.asObservable();
 
-  private loadingSubject = new BehaviorSubject<boolean>(false);
-  public loading$: Observable<boolean> = this.loadingSubject.asObservable();
+  private readonly loadingSubject = new BehaviorSubject<boolean>(false);
+  public readonly loading$: Observable<boolean> =
+    this.loadingSubject.asObservable();
 
-  private errorSubject = new BehaviorSubject<string | null>(null);
-  public error$: Observable<string | null> = this.errorSubject.asObservable();
+  private readonly errorSubject = new BehaviorSubject<string | null>(null);
+  public readonly error$: Observable<string | null> =
+    this.errorSubject.asObservable();
 
-  private addressSubject = new BehaviorSubject<`0x${string}` | null>(null);
-  public address$ = this.addressSubject.asObservable();
+  private readonly addressSubject = new BehaviorSubject<`0x${string}` | null>(
+    null
+  );
+  public readonly address$: Observable<`0x${string}` | null> =
+    this.addressSubject.asObservable();
 
-  // Viem clients
+  // Cleanup subject for subscriptions
+  private readonly destroy$ = new Subject<void>();
+
+  // Viem clients with proper typing
   private publicClient: any = null;
   private walletClient: any = null;
-
-  // Current connected address
   private currentAddress: `0x${string}` | null = null;
+
+  // Prevent duplicate initialization
+  private initializationPromise: Promise<void> | null = null;
 
   constructor() {
     this.initializePublicClient();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.cleanup();
+  }
+
   /**
-   * ✅ NO CACHE: Initialize with cacheTime disabled
+   * Initialize public client with optimized settings
    */
   private initializePublicClient(): void {
     try {
@@ -163,54 +160,73 @@ export class Web3BookmarkService {
       );
 
       this.publicClient = createPublicClient({
-        chain: celoAlfajores,
-        transport: fallback(transports, {
-          rank: false,
-        }),
-        batch: {
-          multicall: true,
-        },
-        // ✅ DISABLE CACHING
-        cacheTime: 0, // Don't cache any responses
+        chain: baseSepolia,
+        transport: fallback(transports, { rank: false }),
+        batch: { multicall: true },
+        cacheTime: 60000,
       });
 
-      console.log('✅ Public client initialized with NO CACHE');
+      console.log('✅ Public client (Base Sophia) initialized');
     } catch (error) {
       console.error('❌ Error initializing public client:', error);
+      this.errorSubject.next('Failed to initialize blockchain connection');
     }
   }
 
   /**
-   * Initialize with connected wallet
+   * Initialize with connected wallet (prevents duplicate calls)
    */
   async initializeWithWallet(address: string): Promise<void> {
-    if (!address) {
-      console.error('❌ No address provided');
+    // Prevent duplicate initialization
+    if (this.initializationPromise) {
+      return this.initializationPromise;
+    }
+
+    // Check if already initialized with same address
+    if (this.currentAddress === address && this.walletClient) {
+      console.log('⚠️ Already initialized with address:', address);
       return;
+    }
+
+    this.initializationPromise = this._initializeWithWallet(address);
+
+    try {
+      await this.initializationPromise;
+    } finally {
+      this.initializationPromise = null;
+    }
+  }
+
+  private async _initializeWithWallet(address: string): Promise<void> {
+    if (!address) {
+      throw new Error('No address provided');
     }
 
     try {
       this.loadingSubject.next(true);
+      this.errorSubject.next(null);
+
       this.currentAddress = address as `0x${string}`;
       this.addressSubject.next(this.currentAddress);
 
-      if (typeof window.ethereum === 'undefined') {
+      if (typeof window === 'undefined' || !window.ethereum) {
         throw new Error('Ethereum provider not found');
       }
 
       this.walletClient = createWalletClient({
-        chain: celoAlfajores,
+        chain: baseSepolia,
         transport: custom(window.ethereum as any),
       });
 
-      // Load user's bookmarks
+      // Load bookmarks
       await this.loadBookmarksFromContract(this.currentAddress);
 
-      console.log('✅ Web3 initialized successfully for address:', address);
+      console.log('✅ Web3 initialized for:', address);
     } catch (error: any) {
       console.error('❌ Error initializing Web3:', error);
-      this.errorSubject.next(error.message || 'Failed to initialize Web3');
-      throw error;
+      const errorMessage = this.getReadableError(error);
+      this.errorSubject.next(errorMessage);
+      throw new Error(errorMessage);
     } finally {
       this.loadingSubject.next(false);
     }
@@ -224,10 +240,15 @@ export class Web3BookmarkService {
     this.currentAddress = null;
     this.bookmarksSubject.next([]);
     this.errorSubject.next(null);
+    this.addressSubject.next(null);
+    this.initializationPromise = null;
 
-    this.addressSubject.next(null); // <-- new
+    console.log('🧹 Service cleaned up');
   }
 
+  /**
+   * Load bookmarks from contract with retry logic
+   */
   private async loadBookmarksFromContract(
     address: `0x${string}`,
     retryCount = 0
@@ -245,18 +266,17 @@ export class Web3BookmarkService {
         })...`
       );
 
-      // ✅ Use blockTag: 'latest' to force fresh data
       const bookmarksData = (await this.publicClient.readContract({
         address: this.CONTRACT_ADDRESS,
         abi: this.CONTRACT_ABI,
         functionName: 'getAllBookmarks',
         args: [address],
-        blockTag: 'latest', // Force reading from latest block
-      })) as any[];
+        blockTag: 'latest',
+      })) as ContractBookmark[];
 
       const bookmarks: BookmarkedProfile[] = bookmarksData
-        .filter((b: any) => b.exists)
-        .map((b: any) => ({
+        .filter((b) => b.exists)
+        .map((b) => ({
           platform: b.platform,
           username: b.username,
           avatar: b.avatar || undefined,
@@ -267,7 +287,7 @@ export class Web3BookmarkService {
       this.bookmarksSubject.next(bookmarks);
       this.errorSubject.next(null);
 
-      console.log('✅ Loaded bookmarks for address', address, bookmarks);
+      console.log(`✅ Loaded ${bookmarks.length} bookmarks`);
     } catch (error: any) {
       console.error(
         `❌ Error loading bookmarks (attempt ${retryCount + 1}):`,
@@ -275,266 +295,186 @@ export class Web3BookmarkService {
       );
 
       if (retryCount < this.MAX_RETRIES) {
-        console.log(`⏳ Retrying in ${(retryCount + 1) * 2} seconds...`);
-        await this.delay((retryCount + 1) * 2000);
+        const delay = this.RETRY_DELAY_BASE * (retryCount + 1);
+        console.log(`⏳ Retrying in ${delay / 1000} seconds...`);
+        await this.delay(delay);
         return this.loadBookmarksFromContract(address, retryCount + 1);
       }
 
       this.bookmarksSubject.next([]);
-
       const errorMessage = this.getReadableError(error);
       this.errorSubject.next(errorMessage);
-      console.error('❌ Final error:', errorMessage);
     } finally {
       this.loadingSubject.next(false);
     }
   }
 
-  private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
-  private getReadableError(error: any): string {
-    if (
-      error.message?.includes('timeout') ||
-      error.message?.includes('took too long')
-    ) {
-      return 'Network timeout. Please check your connection and try again.';
-    }
-    if (error.message?.includes('fetch failed')) {
-      return 'Network error. Unable to connect to blockchain.';
-    }
-    if (error.message?.includes('contract')) {
-      return 'Smart contract error. Please verify the contract address.';
-    }
-    return error.shortMessage || error.message || 'Unknown error occurred';
-  }
-
   /**
-   * ✅ NO CACHE: Refresh bookmarks with fresh data
+   * Refresh bookmarks from blockchain
    */
   async refreshBookmarks(): Promise<void> {
-    if (this.currentAddress) {
-      await this.loadBookmarksFromContract(this.currentAddress);
+    if (!this.currentAddress) {
+      console.warn('⚠️ No address to refresh bookmarks for');
+      return;
     }
+
+    await this.loadBookmarksFromContract(this.currentAddress);
   }
 
   /**
    * Add a bookmark to the blockchain
    */
-  // async addBookmark(platform: string, profile: any): Promise<void> {
-  //   if (!this.walletClient || !this.currentAddress) {
-  //     throw new Error(
-  //       'Wallet not connected. Please connect your wallet first.'
-  //     );
-  //   }
+  async addBookmark(platform: string, profile: any): Promise<void> {
+    if (!this.walletClient || !this.currentAddress) {
+      throw new Error(
+        'Wallet not connected. Please connect your wallet first.'
+      );
+    }
 
-  //   try {
-  //     this.loadingSubject.next(true);
-  //     this.errorSubject.next(null);
+    try {
+      this.loadingSubject.next(true);
+      this.errorSubject.next(null);
 
-  //     const username = profile.username || profile.handle || 'Unknown';
-  //     const avatar = profile.avatar || '';
-  //     const url = profile.url || '';
+      const username = profile.username || profile.handle || 'Unknown';
+      const avatar = profile.avatar || '';
+      const url = profile.url || '';
 
-  //     // Check if already bookmarked (with fresh data)
-  //     if (this.publicClient) {
-  //       const isBookmarked = await this.publicClient.readContract({
-  //         address: this.CONTRACT_ADDRESS,
-  //         abi: this.CONTRACT_ABI,
-  //         functionName: 'isBookmarked',
-  //         args: [this.currentAddress, platform],
-  //         blockTag: 'latest', // Force fresh check
-  //       });
+      // Check if already bookmarked
+      const isBookmarked = await this.isBookmarked(platform);
+      if (isBookmarked) {
+        throw new Error(`${platform} is already bookmarked`);
+      }
 
-  //       if (isBookmarked) {
-  //         throw new Error(`${platform} is already bookmarked`);
-  //       }
-  //     }
+      // Send transaction
+      const hash = await this.walletClient.writeContract({
+        address: this.CONTRACT_ADDRESS,
+        abi: this.CONTRACT_ABI,
+        functionName: 'addBookmark',
+        args: [platform, username, avatar, url],
+        account: this.currentAddress,
+        chain: baseSepolia,
+      });
 
-  //     // Send transaction
-  //     const hash = await this.walletClient.writeContract({
-  //       address: this.CONTRACT_ADDRESS,
-  //       abi: this.CONTRACT_ABI,
-  //       functionName: 'addBookmark',
-  //       args: [platform, username, avatar, url],
-  //       account: this.currentAddress,
-  //       chain: celoAlfajores,
-  //     });
+      console.log('📤 Transaction sent:', hash);
 
-  //     console.log('📤 Transaction sent:', hash);
+      // Wait for confirmation
+      if (this.publicClient) {
+        const receipt = await this.publicClient.waitForTransactionReceipt({
+          hash,
+          timeout: this.REQUEST_TIMEOUT,
+        });
+        console.log('✅ Transaction confirmed:', receipt.transactionHash);
+      }
 
-  //     // Wait for confirmation
-  //     if (this.publicClient) {
-  //       const receipt = await this.publicClient.waitForTransactionReceipt({
-  //         hash,
-  //         timeout: this.REQUEST_TIMEOUT,
-  //       });
-  //       console.log('✅ Transaction confirmed:', receipt.transactionHash);
-  //     }
+      // Wait for blockchain state to update
+      await this.delay(this.POST_TX_DELAY);
 
-  //     // ✅ Add small delay to ensure blockchain state is updated
-  //     await this.delay(1000);
-
-  //     // Reload bookmarks with fresh data
-  //     await this.loadBookmarksFromContract(this.currentAddress);
-  //   } catch (error: any) {
-  //     console.error('❌ Error adding bookmark:', error);
-  //     const errorMessage = this.getReadableError(error);
-  //     this.errorSubject.next(errorMessage);
-  //     throw new Error(errorMessage);
-  //   } finally {
-  //     this.loadingSubject.next(false);
-  //   }
-  // }
+      // Reload bookmarks
+      await this.loadBookmarksFromContract(this.currentAddress);
+    } catch (error: any) {
+      console.error('❌ Error adding bookmark:', error);
+      const errorMessage = this.getReadableError(error);
+      this.errorSubject.next(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      this.loadingSubject.next(false);
+    }
+  }
 
   /**
    * Remove a bookmark from the blockchain
    */
-  // async removeBookmark(platform: string): Promise<void> {
-  //   if (!this.walletClient || !this.currentAddress) {
-  //     throw new Error(
-  //       'Wallet not connected. Please connect your wallet first.'
-  //     );
-  //   }
+  async removeBookmark(platform: string): Promise<void> {
+    if (!this.walletClient || !this.currentAddress) {
+      throw new Error(
+        'Wallet not connected. Please connect your wallet first.'
+      );
+    }
 
-  //   try {
-  //     this.loadingSubject.next(true);
-  //     this.errorSubject.next(null);
+    try {
+      const current = await this.walletClient.getChainId();
+      if (current !== baseSepolia.id) {
+        await this.switchToBaseSepolia();
+      }
 
-  //     const hash = await this.walletClient.writeContract({
-  //       address: this.CONTRACT_ADDRESS,
-  //       abi: this.CONTRACT_ABI,
-  //       functionName: 'removeBookmark',
-  //       args: [platform],
-  //       account: this.currentAddress,
-  //       chain: celoAlfajores,
-  //     });
+      this.loadingSubject.next(true);
+      this.errorSubject.next(null);
 
-  //     console.log('📤 Transaction sent:', hash);
+      const hash = await this.walletClient.writeContract({
+        address: this.CONTRACT_ADDRESS,
+        abi: this.CONTRACT_ABI,
+        functionName: 'removeBookmark',
+        args: [platform],
+        account: this.currentAddress,
+        chain: baseSepolia,
+      });
 
-  //     if (this.publicClient) {
-  //       const receipt = await this.publicClient.waitForTransactionReceipt({
-  //         hash,
-  //         timeout: this.REQUEST_TIMEOUT,
-  //       });
-  //       console.log('✅ Transaction confirmed:', receipt.transactionHash);
-  //     }
+      console.log('📤 Transaction sent:', hash);
 
-  //     // ✅ Add small delay
-  //     await this.delay(1000);
+      if (this.publicClient) {
+        const receipt = await this.publicClient.waitForTransactionReceipt({
+          hash,
+          timeout: this.REQUEST_TIMEOUT,
+        });
+        console.log('✅ Transaction confirmed:', receipt.transactionHash);
+      }
 
-  //     await this.loadBookmarksFromContract(this.currentAddress);
-  //   } catch (error: any) {
-  //     console.error('❌ Error removing bookmark:', error);
-  //     const errorMessage = this.getReadableError(error);
-  //     this.errorSubject.next(errorMessage);
-  //     throw new Error(errorMessage);
-  //   } finally {
-  //     this.loadingSubject.next(false);
-  //   }
-  // }
+      await this.delay(this.POST_TX_DELAY);
+      await this.loadBookmarksFromContract(this.currentAddress);
+    } catch (error: any) {
+      console.error('❌ Error removing bookmark:', error);
+      const errorMessage = this.getReadableError(error);
+      this.errorSubject.next(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      this.loadingSubject.next(false);
+    }
+  }
 
   /**
-   * Toggle bookmark
+   * Check if a platform is bookmarked
    */
-  // async toggleBookmark(platform: string, profile: any): Promise<void> {
-  //   const isBookmarked = await this.isBookmarked(platform);
+  async isBookmarked(platform: string): Promise<boolean> {
+    if (!this.currentAddress || !this.publicClient) {
+      return false;
+    }
 
-  //   if (isBookmarked) {
-  //     await this.removeBookmark(platform);
-  //   } else {
-  //     await this.addBookmark(platform, profile);
-  //   }
-  // }
+    try {
+      const result = await this.publicClient.readContract({
+        address: this.CONTRACT_ADDRESS,
+        abi: this.CONTRACT_ABI,
+        functionName: 'isBookmarked',
+        args: [this.currentAddress, platform],
+        blockTag: 'latest',
+      });
+
+      return result as boolean;
+    } catch (error) {
+      console.error('❌ Error checking bookmark status:', error);
+      return false;
+    }
+  }
 
   /**
-   * ✅ NO CACHE: Check if a platform is bookmarked with fresh data
+   * Check if a platform is bookmarked (synchronous from cache)
    */
-  // async isBookmarked(platform: string): Promise<boolean> {
-  //   if (!this.currentAddress || !this.publicClient) {
-  //     return false;
-  //   }
-
-  //   try {
-  //     const result = await this.publicClient.readContract({
-  //       address: this.CONTRACT_ADDRESS,
-  //       abi: this.CONTRACT_ABI,
-  //       functionName: 'isBookmarked',
-  //       args: [this.currentAddress, platform],
-  //       blockTag: 'latest', // Force fresh check
-  //     });
-
-  //     return result as boolean;
-  //   } catch (error) {
-  //     console.error('❌ Error checking bookmark status:', error);
-  //     return false;
-  //   }
-  // }
+  isBookmarkedSync(platform: string): boolean {
+    return this.bookmarksSubject.value.some((b) => b.platform === platform);
+  }
 
   /**
-   * Check if a platform is bookmarked (synchronous)
-   */
-  // isBookmarkedSync(platform: string): boolean {
-  //   return this.bookmarksSubject.value.some((b) => b.platform === platform);
-  // }
-
-  /**
-   * Get all bookmarks
+   * Get all bookmarks (synchronous)
    */
   getAllBookmarks(): BookmarkedProfile[] {
-    return this.bookmarksSubject.value;
+    return [...this.bookmarksSubject.value];
   }
 
   /**
    * Get bookmark by platform
    */
-  // getBookmark(platform: string): BookmarkedProfile | undefined {
-  //   return this.bookmarksSubject.value.find((b) => b.platform === platform);
-  // }
-
-  /**
-   * Clear all bookmarks
-   */
-  // async clearAllBookmarks(): Promise<void> {
-  //   if (!this.walletClient || !this.currentAddress) {
-  //     throw new Error(
-  //       'Wallet not connected. Please connect your wallet first.'
-  //     );
-  //   }
-
-  //   try {
-  //     this.loadingSubject.next(true);
-  //     this.errorSubject.next(null);
-
-  //     const hash = await this.walletClient.writeContract({
-  //       address: this.CONTRACT_ADDRESS,
-  //       abi: this.CONTRACT_ABI,
-  //       functionName: 'clearAllBookmarks',
-  //       account: this.currentAddress,
-  //       chain: celoAlfajores,
-  //     });
-
-  //     console.log('📤 Transaction sent:', hash);
-
-  //     if (this.publicClient) {
-  //       const receipt = await this.publicClient.waitForTransactionReceipt({
-  //         hash,
-  //         timeout: this.REQUEST_TIMEOUT,
-  //       });
-  //       console.log('✅ Transaction confirmed:', receipt.transactionHash);
-  //     }
-
-  //     this.bookmarksSubject.next([]);
-  //   } catch (error: any) {
-  //     console.error('❌ Error clearing bookmarks:', error);
-  //     const errorMessage = this.getReadableError(error);
-  //     this.errorSubject.next(errorMessage);
-  //     throw new Error(errorMessage);
-  //   } finally {
-  //     this.loadingSubject.next(false);
-  //   }
-  // }
+  getBookmark(platform: string): BookmarkedProfile | undefined {
+    return this.bookmarksSubject.value.find((b) => b.platform === platform);
+  }
 
   /**
    * Get bookmarks count
@@ -544,25 +484,25 @@ export class Web3BookmarkService {
   }
 
   /**
-   * ✅ NO CACHE: Get bookmarks for any address with fresh data
+   * Get bookmarks for any address
    */
   async getBookmarksForAddress(address: string): Promise<BookmarkedProfile[]> {
-    try {
-      if (!this.publicClient) {
-        throw new Error('Public client not initialized');
-      }
+    if (!this.publicClient) {
+      throw new Error('Public client not initialized');
+    }
 
+    try {
       const bookmarksData = (await this.publicClient.readContract({
         address: this.CONTRACT_ADDRESS,
         abi: this.CONTRACT_ABI,
         functionName: 'getAllBookmarks',
         args: [address as `0x${string}`],
-        blockTag: 'latest', // Force fresh data
-      })) as any[];
+        blockTag: 'latest',
+      })) as ContractBookmark[];
 
       return bookmarksData
-        .filter((b: any) => b.exists)
-        .map((b: any) => ({
+        .filter((b) => b.exists)
+        .map((b) => ({
           platform: b.platform,
           username: b.username,
           avatar: b.avatar || undefined,
@@ -587,5 +527,50 @@ export class Web3BookmarkService {
    */
   isInitialized(): boolean {
     return !!this.walletClient && !!this.currentAddress;
+  }
+
+  /**
+   * Utility: Delay execution
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Get readable error message
+   */
+  private getReadableError(error: any): string {
+    const message = error.message || '';
+
+    if (message.includes('timeout') || message.includes('took too long')) {
+      return 'Network timeout. Please check your connection and try again.';
+    }
+    if (message.includes('fetch failed')) {
+      return 'Network error. Unable to connect to blockchain.';
+    }
+    if (message.includes('contract')) {
+      return 'Smart contract error. Please verify the contract address.';
+    }
+    if (message.includes('rejected') || message.includes('denied')) {
+      return 'Transaction rejected by user.';
+    }
+
+    return error.shortMessage || message || 'Unknown error occurred';
+  }
+
+  async switchToBaseSepolia() {
+    if (!this.walletClient) {
+      throw new Error('Wallet client chưa được khởi tạo');
+    }
+
+    const chainId = baseSepolia.id;
+
+    try {
+      await this.walletClient.switchChain({ id: chainId });
+      console.log('Switched to Base Sepolia:', chainId);
+    } catch (err) {
+      console.error('Error switching chain:', err);
+      throw err;
+    }
   }
 }

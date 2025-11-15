@@ -1,11 +1,11 @@
 import { createAppKit } from '@reown/appkit';
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
-import { mainnet, sepolia, arbitrum, base } from 'viem/chains';
+import { mainnet, baseSepolia, arbitrum, base } from 'viem/chains';
 
 
 const projectId = 'be63c666d855988f759d93e4eb2e2795'
 
-export const networks = [base, arbitrum]
+export const networks = [baseSepolia]
 
 // 2. Set up Wagmi adapter
 const wagmiAdapter = new WagmiAdapter({
@@ -24,7 +24,7 @@ const metadata = {
 
 export const appKit = createAppKit({
   adapters: [wagmiAdapter],
-  networks: [base, arbitrum, mainnet],
+  networks: [baseSepolia],
   metadata,
   projectId,
   features: {
