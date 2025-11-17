@@ -43,6 +43,9 @@ export class Web3BookmarkService implements OnDestroy {
   private readonly MAX_RETRIES = 3;
   private readonly RETRY_DELAY_BASE = 2000;
   private readonly POST_TX_DELAY = 1000;
+  
+  // LocalStorage key for caching bookmarks
+  private readonly STORAGE_KEY = 'web3_bookmarks_cache';
 
   // Contract ABI (typed for better type safety)
   private readonly CONTRACT_ABI = [
@@ -138,12 +141,42 @@ export class Web3BookmarkService implements OnDestroy {
 
   constructor() {
     this.initializePublicClient();
+    // Load bookmarks from cache on initialization
+    this.loadBookmarksFromCache();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
     this.cleanup();
+  }
+
+  /**
+   * Load bookmarks from localStorage cache
+   */
+  private loadBookmarksFromCache(): void {
+    try {
+      const cached = localStorage.getItem(this.STORAGE_KEY);
+      if (cached) {
+        const bookmarks = JSON.parse(cached) as BookmarkedProfile[];
+        this.bookmarksSubject.next(bookmarks);
+        console.log('📚 Loaded bookmarks from cache:', bookmarks.length);
+      }
+    } catch (error) {
+      console.error('❌ Error loading bookmarks from cache:', error);
+    }
+  }
+
+  /**
+   * Save bookmarks to localStorage cache
+   */
+  private saveBookmarksToCache(bookmarks: BookmarkedProfile[]): void {
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(bookmarks));
+      console.log('💾 Saved bookmarks to cache:', bookmarks.length);
+    } catch (error) {
+      console.error('❌ Error saving bookmarks to cache:', error);
+    }
   }
 
   /**
@@ -166,7 +199,7 @@ export class Web3BookmarkService implements OnDestroy {
         cacheTime: 60000,
       });
 
-      console.log('✅ Public client (Base Sophia) initialized');
+      console.log('✅ Public client (Base Sepolia) initialized');
     } catch (error) {
       console.error('❌ Error initializing public client:', error);
       this.errorSubject.next('Failed to initialize blockchain connection');
@@ -218,7 +251,7 @@ export class Web3BookmarkService implements OnDestroy {
         transport: custom(window.ethereum as any),
       });
 
-      // Load bookmarks
+      // Load bookmarks from blockchain
       await this.loadBookmarksFromContract(this.currentAddress);
 
       console.log('✅ Web3 initialized for:', address);
@@ -238,12 +271,12 @@ export class Web3BookmarkService implements OnDestroy {
   cleanup(): void {
     this.walletClient = null;
     this.currentAddress = null;
-    this.bookmarksSubject.next([]);
+    // Don't clear bookmarks - keep cache
     this.errorSubject.next(null);
     this.addressSubject.next(null);
     this.initializationPromise = null;
 
-    console.log('🧹 Service cleaned up');
+    console.log('🧹 Service cleaned up (cache retained)');
   }
 
   /**
@@ -261,7 +294,7 @@ export class Web3BookmarkService implements OnDestroy {
       }
 
       console.log(
-        `🔄 Loading bookmarks (attempt ${retryCount + 1}/${
+        `🔄 Loading bookmarks from blockchain (attempt ${retryCount + 1}/${
           this.MAX_RETRIES + 1
         })...`
       );
@@ -285,9 +318,10 @@ export class Web3BookmarkService implements OnDestroy {
         }));
 
       this.bookmarksSubject.next(bookmarks);
+      this.saveBookmarksToCache(bookmarks); // Save to cache
       this.errorSubject.next(null);
 
-      console.log(`✅ Loaded ${bookmarks.length} bookmarks`);
+      console.log(`✅ Loaded ${bookmarks.length} bookmarks from blockchain`);
     } catch (error: any) {
       console.error(
         `❌ Error loading bookmarks (attempt ${retryCount + 1}):`,
@@ -301,9 +335,10 @@ export class Web3BookmarkService implements OnDestroy {
         return this.loadBookmarksFromContract(address, retryCount + 1);
       }
 
-      this.bookmarksSubject.next([]);
+      // Don't clear bookmarks on error - keep cache
       const errorMessage = this.getReadableError(error);
       this.errorSubject.next(errorMessage);
+      console.warn('⚠️ Using cached bookmarks due to network error');
     } finally {
       this.loadingSubject.next(false);
     }
@@ -527,6 +562,13 @@ export class Web3BookmarkService implements OnDestroy {
    */
   isInitialized(): boolean {
     return !!this.walletClient && !!this.currentAddress;
+  }
+
+  /**
+   * Check if bookmarks are available (from cache or blockchain)
+   */
+  hasBookmarks(): boolean {
+    return this.bookmarksSubject.value.length > 0;
   }
 
   /**

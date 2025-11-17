@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
-import { BookmarkService } from '../../services/bookmark-service';
+import { Web3BookmarkService } from '../../services/web3-bookmark-service';
 import { appKit } from '../../config/wallet.config';
 import { WalletConnect } from "../wallet-connect/wallet-connect";
 
@@ -17,24 +17,30 @@ import { WalletConnect } from "../wallet-connect/wallet-connect";
   styleUrl: './home-component.css',
 })
 export class HomeComponent {
- address: string | null = null;
+  address: string | null = null;
   currentSearchQuery: string = '';
   private destroy$ = new Subject<void>();
+  
+  // Track pending transactions for UI feedback
+  pendingBookmarks = new Set<string>();
 
   constructor(
     public identityService: IdentityService,
     private router: Router,
-    public bookmarkService: BookmarkService,
+    public bookmarkService: Web3BookmarkService,
     private zone: NgZone,
     private cdr: ChangeDetectorRef
   ) {}
 
-  ngOnInit(): void {
-    // Subscribe to bookmarks if needed for other functionality
+  async ngOnInit(): Promise<void> {
+    // Subscribe to bookmarks
     this.bookmarkService.bookmarks$
       .pipe(takeUntil(this.destroy$))
       .subscribe((bookmarks) => {
         console.log('Current bookmarks:', bookmarks);
+        // Clear pending state when bookmarks update
+        this.pendingBookmarks.clear();
+        this.cdr.detectChanges();
       });
 
     // ✅ Get current session when app starts
@@ -45,18 +51,39 @@ export class HomeComponent {
         this.cdr.detectChanges();
         console.log('Restored session with address:', this.address);
       });
+
+      // Initialize Web3BookmarkService with wallet address
+      try {
+        await this.bookmarkService.initializeWithWallet(currentAccount.address as string);
+        console.log('✅ Web3BookmarkService initialized');
+      } catch (error) {
+        console.error('❌ Error initializing Web3BookmarkService:', error);
+      }
     }
 
     // ✅ Listen to account changes
-    appKit.subscribeAccount((account: any) => {
+    appKit.subscribeAccount(async (account: any) => {
       console.log('Account subscription fired:', account);
-      // Use setTimeout to ensure the update happens after the modal closes
-      setTimeout(() => {
+      
+      setTimeout(async () => {
         this.zone.run(() => {
           this.address = account?.address ? (account.address as string) : null;
           this.cdr.detectChanges();
           console.log('Account changed:', this.address);
         });
+
+        // Initialize or cleanup bookmark service based on wallet connection
+        if (this.address) {
+          try {
+            await this.bookmarkService.initializeWithWallet(this.address);
+            console.log('✅ Web3BookmarkService re-initialized');
+          } catch (error) {
+            console.error('❌ Error initializing Web3BookmarkService:', error);
+          }
+        } else {
+          this.bookmarkService.cleanup();
+          console.log('🧹 Web3BookmarkService cleaned up');
+        }
       }, 100);
     });
   }
@@ -91,25 +118,74 @@ export class HomeComponent {
   }
 
   /**
-   * Toggle bookmark for a platform
+   * Toggle bookmark for a platform with optimistic updates
    */
-  toggleBookmark(platform: string, profile: any): void {
-    this.bookmarkService.toggleBookmark(platform, profile);
+  async toggleBookmark(platform: string, profile: any): Promise<void> {
+    if (this.pendingBookmarks.has(platform)) {
+      console.log('⏳ Transaction already pending for', platform);
+      return;
+    }
 
-    // Optional: Show a toast notification
-    const isNowBookmarked = this.bookmarkService.isBookmarked(platform);
-    console.log(
-      isNowBookmarked
-        ? `✓ Bookmarked ${profile.username}`
-        : `✗ Removed bookmark for ${profile.username}`
-    );
+    const username = profile.username || profile.handle || 'Unknown';
+    const avatar = profile.avatar || profile.pfp_url || '';
+    const url = profile.url || profile.profileUrl || '';
+    
+    const isCurrentlyBookmarked = this.bookmarkService.isBookmarkedSync(platform);
+
+    try {
+      // Mark as pending
+      this.pendingBookmarks.add(platform);
+      this.cdr.detectChanges();
+
+      if (isCurrentlyBookmarked) {
+        // Show optimistic remove
+        console.log(`🔄 Removing bookmark for ${username}...`);
+        
+        // Remove from blockchain (this will update cache on success)
+        await this.bookmarkService.removeBookmark(platform);
+        console.log(`✅ Bookmark removed for ${username}`);
+      } else {
+        // Show optimistic add
+        console.log(`🔄 Adding bookmark for ${username}...`);
+        
+        // Add to blockchain (this will update cache on success)
+        await this.bookmarkService.addBookmark(platform, {
+          username,
+          avatar,
+          url
+        });
+        console.log(`✅ Bookmark added for ${username}`);
+      }
+    } catch (error: any) {
+      console.error('❌ Error toggling bookmark:', error);
+      
+      // Show user-friendly error message
+      if (error.message.includes('rejected') || error.message.includes('denied')) {
+        console.log('Transaction was rejected by user');
+      } else if (error.message.includes('Wallet not connected')) {
+        alert('Please connect your wallet first to bookmark profiles.');
+      } else {
+        alert(error.message || 'Failed to toggle bookmark. Please try again.');
+      }
+    } finally {
+      // Remove pending state
+      this.pendingBookmarks.delete(platform);
+      this.cdr.detectChanges();
+    }
   }
 
   /**
-   * Check if a platform is bookmarked
+   * Check if a platform is bookmarked (synchronous from cache)
    */
   isBookmarked(platform: string): boolean {
-    return this.bookmarkService.isBookmarked(platform);
+    return this.bookmarkService.isBookmarkedSync(platform);
+  }
+
+  /**
+   * Check if bookmark transaction is pending
+   */
+  isBookmarkPending(platform: string): boolean {
+    return this.pendingBookmarks.has(platform);
   }
 
   /**
@@ -118,16 +194,26 @@ export class HomeComponent {
   viewAllBookmarks(): void {
     const bookmarks = this.bookmarkService.getAllBookmarks();
     console.log('All bookmarks:', bookmarks);
-    // You can navigate to a bookmarks page or open a modal here
+    // Navigate to bookmarks page
+    this.router.navigate(['/bookmarks']);
   }
 
   /**
-   * Clear all bookmarks
+   * Refresh bookmarks from blockchain
    */
-  clearAllBookmarks(): void {
-    if (confirm('Are you sure you want to clear all bookmarks?')) {
-      this.bookmarkService.clearAllBookmarks();
-      console.log('All bookmarks cleared');
+  async refreshBookmarks(): Promise<void> {
+    try {
+      await this.bookmarkService.refreshBookmarks();
+      console.log('✅ Bookmarks refreshed from blockchain');
+    } catch (error) {
+      console.error('❌ Error refreshing bookmarks:', error);
     }
+  }
+
+  /**
+   * Get bookmarks count
+   */
+  getBookmarksCount(): number {
+    return this.bookmarkService.getBookmarksCount();
   }
 }

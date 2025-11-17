@@ -1,38 +1,37 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { BookmarkedProfile } from '../../services/bookmark-service';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { Web3BookmarkService } from '../../services/web3-bookmark-service';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-bookmarks-views',
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   standalone: true,
   templateUrl: './bookmarks-views.html',
   styleUrl: './bookmarks-views.css',
 })
 export class BookmarksViews {
-   bookmarks: BookmarkedProfile[] = [];
+  bookmarks: BookmarkedProfile[] = [];
   isLoading: boolean = false;
   error: string | null = null;
   connectedAddress: string | null = null;
+  showWalletWarning: boolean = false;
   
-  // Filter and sort options
-  selectedPlatform: string = 'all';
-  sortBy: 'date' | 'platform' | 'username' = 'date';
-  sortDirection: 'asc' | 'desc' = 'desc';
-  searchQuery: string = '';
+  // Track pending remove operations
+  pendingRemovals = new Set<string>();
 
   private readonly destroy$ = new Subject<void>();
 
   constructor(
     private readonly bookmarkService: Web3BookmarkService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.checkWalletConnection();
     this.subscribeToBookmarks();
     this.subscribeToLoadingState();
     this.subscribeToErrors();
@@ -45,17 +44,6 @@ export class BookmarksViews {
   }
 
   /**
-   * Check if wallet is connected
-   */
-  private checkWalletConnection(): void {
-    if (!this.bookmarkService.isInitialized()) {
-      console.warn('⚠️ Wallet not connected, redirecting...');
-      // Optionally redirect to home or show connect wallet prompt
-      // this.router.navigate(['/']);
-    }
-  }
-
-  /**
    * Subscribe to bookmarks data
    */
   private subscribeToBookmarks(): void {
@@ -65,6 +53,9 @@ export class BookmarksViews {
         next: (bookmarks) => {
           this.bookmarks = bookmarks;
           console.log('📚 Loaded bookmarks:', bookmarks.length);
+          // Clear pending removals when bookmarks update
+          this.pendingRemovals.clear();
+          this.cdr.detectChanges();
         },
         error: (error) => {
           console.error('❌ Error loading bookmarks:', error);
@@ -103,92 +94,73 @@ export class BookmarksViews {
       .pipe(takeUntil(this.destroy$))
       .subscribe((address) => {
         this.connectedAddress = address;
+        this.showWalletWarning = !address && this.bookmarks.length === 0;
       });
   }
 
   /**
-   * Get filtered and sorted bookmarks
+   * Remove a bookmark by platform with optimistic updates
    */
-  get filteredBookmarks(): BookmarkedProfile[] {
-    let filtered = [...this.bookmarks];
-
-    // Filter by platform
-    if (this.selectedPlatform !== 'all') {
-      filtered = filtered.filter(b => b.platform === this.selectedPlatform);
+  async removeBookmark(platform: string): Promise<void> {
+    // Prevent duplicate removal requests
+    if (this.pendingRemovals.has(platform)) {
+      console.log('⏳ Removal already in progress for', platform);
+      return;
     }
 
-    // Filter by search query
-    if (this.searchQuery.trim()) {
-      const query = this.searchQuery.toLowerCase();
-      filtered = filtered.filter(b => 
-        b.username.toLowerCase().includes(query) ||
-        b.platform.toLowerCase().includes(query) ||
-        b.url.toLowerCase().includes(query)
-      );
+    // Confirm deletion
+    const bookmark = this.bookmarks.find(b => b.platform === platform);
+    const confirmMessage = bookmark 
+      ? `Are you sure you want to remove ${bookmark.username} from your bookmarks?`
+      : 'Are you sure you want to remove this bookmark?';
+    
+    if (!confirm(confirmMessage)) {
+      return;
     }
 
-    // Sort bookmarks
-    filtered.sort((a, b) => {
-      let comparison = 0;
+    try {
+      // Mark as pending
+      this.pendingRemovals.add(platform);
+      this.error = null;
+      this.cdr.detectChanges();
 
-      switch (this.sortBy) {
-        case 'date':
-          comparison = a.bookmarkedAt - b.bookmarkedAt;
-          break;
-        case 'platform':
-          comparison = a.platform.localeCompare(b.platform);
-          break;
-        case 'username':
-          comparison = a.username.localeCompare(b.username);
-          break;
+      console.log('🔄 Removing bookmark:', platform);
+      
+      // Remove from blockchain
+      await this.bookmarkService.removeBookmark(platform);
+      
+      console.log('✅ Bookmark removed:', platform);
+    } catch (error: any) {
+      console.error('❌ Error removing bookmark:', error);
+      
+      // Show user-friendly error message
+      if (error.message.includes('rejected') || error.message.includes('denied')) {
+        this.error = 'Transaction was cancelled.';
+      } else if (error.message.includes('Wallet not connected')) {
+        this.error = 'Please connect your wallet to remove bookmarks.';
+        this.showWalletWarning = true;
+      } else {
+        this.error = error.message || 'Failed to remove bookmark. Please try again.';
       }
-
-      return this.sortDirection === 'asc' ? comparison : -comparison;
-    });
-
-    return filtered;
-  }
-
-  /**
-   * Get unique platforms from bookmarks
-   */
-  get availablePlatforms(): string[] {
-    const platforms = new Set(this.bookmarks.map(b => b.platform));
-    return Array.from(platforms).sort();
-  }
-
-  /**
-   * Handle platform filter change
-   */
-  onPlatformFilterChange(platform: string): void {
-    this.selectedPlatform = platform;
-  }
-
-  /**
-   * Handle sort change
-   */
-  onSortChange(sortBy: 'date' | 'platform' | 'username'): void {
-    if (this.sortBy === sortBy) {
-      // Toggle direction if same sort field
-      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortBy = sortBy;
-      this.sortDirection = 'desc';
+    } finally {
+      // Remove pending state
+      this.pendingRemovals.delete(platform);
+      this.cdr.detectChanges();
     }
   }
 
   /**
-   * Handle search input
+   * Check if a bookmark removal is pending
    */
-  onSearchChange(query: string): void {
-    this.searchQuery = query;
+  isRemovalPending(platform: string): boolean {
+    return this.pendingRemovals.has(platform);
   }
 
   /**
-   * Clear search
+   * Navigate to connect wallet
    */
-  clearSearch(): void {
-    this.searchQuery = '';
+  connectWallet(): void {
+    this.router.navigate(['/']);
   }
 
   /**
@@ -196,110 +168,19 @@ export class BookmarksViews {
    */
   async refreshBookmarks(): Promise<void> {
     try {
+      this.error = null;
       await this.bookmarkService.refreshBookmarks();
-      console.log('✅ Bookmarks refreshed successfully');
+      console.log('✅ Bookmarks refreshed from blockchain');
     } catch (error) {
       console.error('❌ Error refreshing bookmarks:', error);
+      this.error = 'Failed to refresh bookmarks from blockchain.';
     }
   }
 
   /**
-   * Remove a bookmark
+   * Clear error message
    */
-  async removeBookmark(platform: string): Promise<void> {
-    if (!confirm(`Are you sure you want to remove ${platform} from bookmarks?`)) {
-      return;
-    }
-
-    try {
-      await this.bookmarkService.removeBookmark(platform);
-      console.log('✅ Bookmark removed successfully');
-    } catch (error) {
-      console.error('❌ Error removing bookmark:', error);
-      alert('Failed to remove bookmark. Please try again.');
-    }
-  }
-
-  /**
-   * Navigate to profile URL
-   */
-  openProfile(bookmark: BookmarkedProfile): void {
-    if (bookmark.url) {
-      window.open(bookmark.url, '_blank');
-    }
-  }
-
-  /**
-   * Format timestamp to readable date
-   */
-  formatDate(timestamp: number): string {
-    return new Date(timestamp).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  }
-
-  /**
-   * Get platform icon/emoji
-   */
-  getPlatformIcon(platform: string): string {
-    const icons: Record<string, string> = {
-      'twitter': '𝕏',
-      'github': '⚙️',
-      'linkedin': '💼',
-      'instagram': '📷',
-      'facebook': '👥',
-      'youtube': '▶️',
-      'tiktok': '🎵',
-      'discord': '💬',
-      'telegram': '✈️',
-      'reddit': '🤖',
-    };
-    return icons[platform.toLowerCase()] || '🔖';
-  }
-
-  /**
-   * Get shortened address
-   */
-  get shortAddress(): string {
-    if (!this.connectedAddress) return '';
-    return `${this.connectedAddress.slice(0, 6)}...${this.connectedAddress.slice(-4)}`;
-  }
-
-  /**
-   * Copy address to clipboard
-   */
-  async copyAddress(): Promise<void> {
-    if (!this.connectedAddress) return;
-    
-    try {
-      await navigator.clipboard.writeText(this.connectedAddress);
-      console.log('📋 Address copied');
-    } catch (error) {
-      console.error('❌ Failed to copy address:', error);
-    }
-  }
-
-  /**
-   * Get empty state message
-   */
-  get emptyStateMessage(): string {
-    if (this.searchQuery) {
-      return `No bookmarks found matching "${this.searchQuery}"`;
-    }
-    if (this.selectedPlatform !== 'all') {
-      return `No bookmarks found for ${this.selectedPlatform}`;
-    }
-    return 'No bookmarks yet. Start exploring and bookmark profiles!';
-  }
-
-  /**
-   * TrackBy function for ngFor optimization
-   */
-  trackByPlatform(index: number, bookmark: BookmarkedProfile): string {
-    return bookmark.platform;
+  clearError(): void {
+    this.error = null;
   }
 }

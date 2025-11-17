@@ -1,200 +1,103 @@
-<div class="container mx-auto px-4 py-8 max-w-7xl">
-  <!-- Header Section -->
-  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <h1 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-        <span class="text-4xl">🔖</span>
-        My Bookmarks
-      </h1>
-      
-      <div class="flex items-center gap-4" *ngIf="connectedAddress">
-        <button 
-          class="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors flex items-center gap-2"
-          (click)="copyAddress()"
-          title="Click to copy address">
-          <span>👛</span>
-          {{ shortAddress }}
-        </button>
-        <span class="text-gray-600 dark:text-gray-400 font-medium">{{ bookmarks.length }} saved</span>
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-6">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-4xl font-bold text-white mb-2">My Bookmarks</h1>
+      <p class="text-gray-400">Manage your saved Web3 profiles</p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="flex justify-center items-center py-20">
+      <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-purple-500"></div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !isLoading" class="bg-red-500/10 border border-red-500 rounded-lg p-4 mb-6">
+      <div class="flex items-center">
+        <svg class="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <p class="text-red-400">{{ error }}</p>
       </div>
     </div>
 
-    <!-- Action Bar -->
-    <div class="mt-4 flex justify-end">
-      <button 
-        class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-        (click)="refreshBookmarks()"
-        [disabled]="isLoading"
-        title="Refresh bookmarks">
-        <span [class.animate-spin]="isLoading">🔄</span>
-        Refresh
-      </button>
-    </div>
-  </div>
-
-  <!-- Filters and Search -->
-  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6 space-y-4">
-    <!-- Search Bar -->
-    <div class="relative">
-      <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl">🔍</span>
-      <input
-        type="text"
-        class="w-full pl-12 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-        placeholder="Search bookmarks..."
-        [value]="searchQuery"
-        (input)="onSearchChange($any($event.target).value)"
-      />
-      <button 
-        *ngIf="searchQuery"
-        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-        (click)="clearSearch()"
-        title="Clear search">
-        ✕
-      </button>
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && bookmarks.length === 0" class="text-center py-20">
+      <svg class="w-24 h-24 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+      </svg>
+      <h3 class="text-2xl font-semibold text-gray-300 mb-2">No Bookmarks Yet</h3>
+      <p class="text-gray-500 mb-6">Start exploring and bookmark your favorite Web3 profiles</p>
+      <a routerLink="/" class="inline-flex items-center px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+        Explore Profiles
+      </a>
     </div>
 
-    <!-- Platform Filter -->
-    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-      <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Platform:</label>
-      <select 
-        class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-        [value]="selectedPlatform"
-        (change)="onPlatformFilterChange($any($event.target).value)">
-        <option value="all">All Platforms</option>
-        <option *ngFor="let platform of availablePlatforms" [value]="platform">
-          {{ getPlatformIcon(platform) }} {{ platform }}
-        </option>
-      </select>
-    </div>
-
-    <!-- Sort Options -->
-    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-      <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Sort by:</label>
-      <div class="flex gap-2 flex-wrap">
-        <button 
-          class="px-4 py-2 rounded-lg border transition-colors"
-          [class.bg-blue-500]="sortBy === 'date'"
-          [class.text-white]="sortBy === 'date'"
-          [class.border-blue-500]="sortBy === 'date'"
-          [class.bg-white]="sortBy !== 'date'"
-          [class.text-gray-700]="sortBy !== 'date'"
-          [class.border-gray-300]="sortBy !== 'date'"
-          [class.dark:bg-gray-700]="sortBy !== 'date'"
-          [class.dark:text-gray-300]="sortBy !== 'date'"
-          [class.dark:border-gray-600]="sortBy !== 'date'"
-          (click)="onSortChange('date')">
-          Date 
-          <span *ngIf="sortBy === 'date'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
-        </button>
-        <button 
-          class="px-4 py-2 rounded-lg border transition-colors"
-          [class.bg-blue-500]="sortBy === 'platform'"
-          [class.text-white]="sortBy === 'platform'"
-          [class.border-blue-500]="sortBy === 'platform'"
-          [class.bg-white]="sortBy !== 'platform'"
-          [class.text-gray-700]="sortBy !== 'platform'"
-          [class.border-gray-300]="sortBy !== 'platform'"
-          [class.dark:bg-gray-700]="sortBy !== 'platform'"
-          [class.dark:text-gray-300]="sortBy !== 'platform'"
-          [class.dark:border-gray-600]="sortBy !== 'platform'"
-          (click)="onSortChange('platform')">
-          Platform
-          <span *ngIf="sortBy === 'platform'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
-        </button>
-        <button 
-          class="px-4 py-2 rounded-lg border transition-colors"
-          [class.bg-blue-500]="sortBy === 'username'"
-          [class.text-white]="sortBy === 'username'"
-          [class.border-blue-500]="sortBy === 'username'"
-          [class.bg-white]="sortBy !== 'username'"
-          [class.text-gray-700]="sortBy !== 'username'"
-          [class.border-gray-300]="sortBy !== 'username'"
-          [class.dark:bg-gray-700]="sortBy !== 'username'"
-          [class.dark:text-gray-300]="sortBy !== 'username'"
-          [class.dark:border-gray-600]="sortBy !== 'username'"
-          (click)="onSortChange('username')">
-          Username
-          <span *ngIf="sortBy === 'username'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Loading State -->
-  <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-    <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-    <p class="mt-4 text-gray-600 dark:text-gray-400">Loading bookmarks...</p>
-  </div>
-
-  <!-- Error State -->
-  <div *ngIf="error && !isLoading" class="flex flex-col items-center justify-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-    <span class="text-6xl mb-4">⚠️</span>
-    <p class="text-red-600 dark:text-red-400 mb-4">{{ error }}</p>
-    <button class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors" (click)="refreshBookmarks()">Try Again</button>
-  </div>
-
-  <!-- Empty State -->
-  <div *ngIf="!isLoading && !error && filteredBookmarks.length === 0" class="flex flex-col items-center justify-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-    <span class="text-6xl mb-4">📭</span>
-    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">{{ emptyStateMessage }}</h3>
-    <p *ngIf="bookmarks.length === 0" class="text-gray-600 dark:text-gray-400">
-      Start exploring profiles and save your favorites here!
-    </p>
-  </div>
-
-  <!-- Bookmarks Grid -->
-  <div *ngIf="!isLoading && !error && filteredBookmarks.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <div 
-      *ngFor="let bookmark of filteredBookmarks; trackBy: trackByPlatform"
-      class="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
-      
-      <!-- Card Header -->
-      <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
-        <div class="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
-          <span class="text-lg">{{ getPlatformIcon(bookmark.platform) }}</span>
-          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ bookmark.platform }}</span>
-        </div>
-        <button 
-          class="text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors text-xl"
-          (click)="removeBookmark(bookmark.platform)"
-          title="Remove bookmark">
-          🗑️
-        </button>
-      </div>
-
-      <!-- Profile Info -->
-      <div class="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" (click)="openProfile(bookmark)">
-        <div class="flex items-center gap-4">
-          <div *ngIf="bookmark.avatar" class="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
-            <img [src]="bookmark.avatar" [alt]="bookmark.username" class="w-full h-full object-cover" />
-          </div>
-          <div *ngIf="!bookmark.avatar" class="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
-            <span class="text-white text-2xl font-bold">{{ bookmark.username.charAt(0).toUpperCase() }}</span>
-          </div>
-          
-          <div class="flex-1 min-w-0">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white truncate">{{ bookmark.username }}</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400 truncate" [title]="bookmark.url">{{ bookmark.url }}</p>
+    <!-- Bookmarks Grid -->
+    <div *ngIf="!isLoading && bookmarks.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div *ngFor="let bookmark of bookmarks" 
+           class="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6 hover:border-purple-500 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20">
+        
+        <!-- Profile Header -->
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center space-x-3">
+            <!-- Avatar -->
+            <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold overflow-hidden"
+                 [ngClass]="bookmark.avatar ? 'bg-transparent' : 'bg-gradient-to-br from-purple-500 to-pink-500'">
+              <img *ngIf="bookmark.avatar" [src]="bookmark.avatar" [alt]="bookmark.username" class="w-full h-full object-cover">
+              <span *ngIf="!bookmark.avatar">{{ bookmark.username.charAt(0).toUpperCase() || '?' }}</span>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-white">{{ bookmark.username }}</h3>
+              <p class="text-sm text-gray-400 capitalize">{{ bookmark.platform }}</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Card Footer -->
-      <div class="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-700">
-        <span class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1" [title]="'Bookmarked on ' + formatDate(bookmark.bookmarkedAt)">
-          🕒 {{ formatDate(bookmark.bookmarkedAt) }}
-        </span>
-        <button 
-          class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded text-sm transition-colors"
-          (click)="openProfile(bookmark)">
-          Visit Profile →
-        </button>
+        <!-- Platform Badge -->
+        <div class="mb-4">
+          <span class="inline-flex items-center px-3 py-1 text-xs rounded-full"
+                [ngClass]="{
+                  'bg-blue-500/20 text-blue-300': bookmark.platform === 'farcaster',
+                  'bg-green-500/20 text-green-300': bookmark.platform === 'lens',
+                  'bg-yellow-500/20 text-yellow-300': bookmark.platform === 'ens',
+                  'bg-purple-500/20 text-purple-300': bookmark.platform !== 'farcaster' && bookmark.platform !== 'lens' && bookmark.platform !== 'ens'
+                }">
+            {{ bookmark.platform | uppercase }}
+          </span>
+        </div>
+
+        <!-- Timestamp -->
+        <div class="text-xs text-gray-500 mb-4">
+          Saved {{ bookmark.bookmarkedAt | date: 'short' }}
+        </div>
+
+        <!-- Actions -->
+        <div class="flex space-x-2">
+          <a [href]="bookmark.url" target="_blank" rel="noopener noreferrer"
+             class="flex-1 text-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors inline-flex items-center justify-center">
+            <span>View Profile</span>
+            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+            </svg>
+          </a>
+          <button (click)="removeBookmark(bookmark.platform)"
+                  class="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 text-sm font-medium rounded-lg transition-colors"
+                  title="Remove bookmark">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Results Summary -->
-  <div *ngIf="!isLoading && filteredBookmarks.length > 0" class="mt-6 text-center text-gray-600 dark:text-gray-400">
-    Showing {{ filteredBookmarks.length }} of {{ bookmarks.length }} bookmarks
+    <!-- Summary -->
+    <div *ngIf="!isLoading && bookmarks.length > 0" class="mt-8 text-center text-gray-400">
+      <p>Total Bookmarks: <span class="text-purple-400 font-semibold">{{ bookmarks.length }}</span></p>
+    </div>
   </div>
 </div>
