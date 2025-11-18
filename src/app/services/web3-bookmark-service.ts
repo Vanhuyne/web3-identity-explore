@@ -367,6 +367,12 @@ export class Web3BookmarkService implements OnDestroy {
     }
 
     try {
+      // Add chain verification here
+      const current = await this.walletClient.getChainId();
+      if (current !== baseSepolia.id) {
+        await this.switchToBaseSepolia();
+      }
+
       this.loadingSubject.next(true);
       this.errorSubject.next(null);
 
@@ -435,6 +441,8 @@ export class Web3BookmarkService implements OnDestroy {
       this.loadingSubject.next(true);
       this.errorSubject.next(null);
 
+      console.log('🗑️ Removing bookmark:', platform);
+
       const hash = await this.walletClient.writeContract({
         address: this.CONTRACT_ADDRESS,
         abi: this.CONTRACT_ABI,
@@ -454,8 +462,13 @@ export class Web3BookmarkService implements OnDestroy {
         console.log('✅ Transaction confirmed:', receipt.transactionHash);
       }
 
+      // Wait for blockchain state to update
       await this.delay(this.POST_TX_DELAY);
+      
+      // Force reload from blockchain
       await this.loadBookmarksFromContract(this.currentAddress);
+      
+      console.log('✅ Bookmarks reloaded after removal');
     } catch (error: any) {
       console.error('❌ Error removing bookmark:', error);
       const errorMessage = this.getReadableError(error);
