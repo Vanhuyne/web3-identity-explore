@@ -110,11 +110,9 @@
             <div *ngIf="identity.farcaster" class="relative p-4 bg-purple-50 rounded-lg border border-purple-100">
               <button 
                 (click)="toggleBookmark('farcaster', identity.farcaster)"
-                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none"
-                [attr.aria-label]="isBookmarked('farcaster') ? 'Remove bookmark' : 'Add bookmark'">
+                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
-                     class="w-6 h-6 transition-colors"
-                     [ngClass]="isBookmarked('farcaster') ? 'fill-purple-600 stroke-purple-600' : 'fill-none stroke-purple-400'">
+                     class="w-6 h-6 transition-colors fill-none stroke-purple-400">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
                 </svg>
               </button>
@@ -142,11 +140,9 @@
             <div *ngIf="identity.ens" class="relative p-4 bg-blue-50 rounded-lg border border-blue-100">
               <button 
                 (click)="toggleBookmark('ens', identity.ens)"
-                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none"
-                [attr.aria-label]="isBookmarked('ens') ? 'Remove bookmark' : 'Add bookmark'">
+                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
-                     class="w-6 h-6 transition-colors"
-                     [ngClass]="isBookmarked('ens') ? 'fill-blue-600 stroke-blue-600' : 'fill-none stroke-blue-400'">
+                     class="w-6 h-6 transition-colors fill-none stroke-blue-400">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
                 </svg>
               </button>
@@ -174,11 +170,9 @@
             <div *ngIf="identity.twitter" class="relative p-4 bg-sky-50 rounded-lg border border-sky-100">
               <button 
                 (click)="toggleBookmark('twitter', identity.twitter)"
-                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none"
-                [attr.aria-label]="isBookmarked('twitter') ? 'Remove bookmark' : 'Add bookmark'">
+                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
-                     class="w-6 h-6 transition-colors"
-                     [ngClass]="isBookmarked('twitter') ? 'fill-sky-600 stroke-sky-600' : 'fill-none stroke-sky-400'">
+                     class="w-6 h-6 transition-colors fill-none stroke-sky-400">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
                 </svg>
               </button>
@@ -206,11 +200,9 @@
             <div *ngIf="identity.github" class="relative p-4 bg-gray-50 rounded-lg border border-gray-200">
               <button 
                 (click)="toggleBookmark('github', identity.github)"
-                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none"
-                [attr.aria-label]="isBookmarked('github') ? 'Remove bookmark' : 'Add bookmark'">
+                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
-                     class="w-6 h-6 transition-colors"
-                     [ngClass]="isBookmarked('github') ? 'fill-gray-700 stroke-gray-700' : 'fill-none stroke-gray-400'">
+                     class="w-6 h-6 transition-colors fill-none stroke-gray-400">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
                 </svg>
               </button>
@@ -238,11 +230,9 @@
             <div *ngIf="identity.zora" class="relative p-4 bg-pink-50 rounded-lg border border-pink-100">
               <button 
                 (click)="toggleBookmark('zora', identity.zora)"
-                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none"
-                [attr.aria-label]="isBookmarked('zora') ? 'Remove bookmark' : 'Add bookmark'">
+                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
-                     class="w-6 h-6 transition-colors"
-                     [ngClass]="isBookmarked('zora') ? 'fill-pink-600 stroke-pink-600' : 'fill-none stroke-pink-400'">
+                     class="w-6 h-6 transition-colors fill-none stroke-pink-400">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
                 </svg>
               </button>
@@ -270,11 +260,9 @@
             <div *ngIf="identity.lens" class="relative p-4 bg-green-50 rounded-lg border border-green-100">
               <button 
                 (click)="toggleBookmark('lens', identity.lens)"
-                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none"
-                [attr.aria-label]="isBookmarked('lens') ? 'Remove bookmark' : 'Add bookmark'">
+                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
-                     class="w-6 h-6 transition-colors"
-                     [ngClass]="isBookmarked('lens') ? 'fill-green-600 stroke-green-600' : 'fill-none stroke-green-400'">
+                     class="w-6 h-6 transition-colors fill-none stroke-green-400">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
                 </svg>
               </button>
@@ -304,8 +292,17 @@
 
     </div>
   </section>
-
+  
 </div>
 
-<!-- Top Navigation Bar - Fixed Position -->
-  
+<app-alert-component
+  [show]="alertShow"
+  [type]="alertType"
+  [title]="alertTitle"
+  [message]="alertMessage"
+  [txHash]="alertTxHash"
+  [dismissible]="alertType !== 'loading'"
+  [autoDismiss]="alertType === 'success' ? 3000 : 0">
+</app-alert-component>
+
+

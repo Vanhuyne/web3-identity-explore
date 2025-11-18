@@ -8,11 +8,12 @@ import { Subject, takeUntil } from 'rxjs';
 import { Web3BookmarkService } from '../../services/web3-bookmark-service';
 import { appKit } from '../../config/wallet.config';
 import { WalletConnect } from "../wallet-connect/wallet-connect";
+import { AlertComponent, AlertType } from '../alert-component/alert-component';
 
 @Component({
   selector: 'app-home-component',
   standalone: true,
-  imports: [CommonModule, FormsModule, SearchBarComponent, RouterLink, WalletConnect],
+  imports: [CommonModule, FormsModule, SearchBarComponent, RouterLink, WalletConnect, AlertComponent],
   templateUrl: './home-component.html',
   styleUrl: './home-component.css',
 })
@@ -23,6 +24,13 @@ export class HomeComponent {
   
   // Track pending transactions for UI feedback
   pendingBookmarks = new Set<string>();
+  
+  // Alert state
+  alertShow: boolean = false;
+  alertType: AlertType = 'info';
+  alertTitle: string = '';
+  alertMessage: string = '';
+  alertTxHash: string = '';
 
   constructor(
     public identityService: IdentityService,
@@ -118,7 +126,19 @@ export class HomeComponent {
   }
 
   /**
-   * Toggle bookmark for a platform with optimistic updates
+   * Show alert notification
+   */
+  private showAlert(type: AlertType, title: string, message: string, txHash: string = ''): void {
+    this.alertType = type;
+    this.alertTitle = title;
+    this.alertMessage = message;
+    this.alertTxHash = txHash;
+    this.alertShow = true;
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Add bookmark for a platform with alerts
    */
   async toggleBookmark(platform: string, profile: any): Promise<void> {
     if (this.pendingBookmarks.has(platform)) {
@@ -130,55 +150,94 @@ export class HomeComponent {
     const avatar = profile.avatar || profile.pfp_url || '';
     const url = profile.url || profile.profileUrl || '';
     
-    const isCurrentlyBookmarked = this.bookmarkService.isBookmarkedSync(platform);
+    // Check if this specific profile is already bookmarked
+    const isCurrentlyBookmarked = this.isBookmarked(platform, username);
+    
+    if (isCurrentlyBookmarked) {
+      console.log('Already bookmarked:', username);
+      this.showAlert(
+        'info',
+        'Already Bookmarked',
+        `${username} is already in your bookmarks.`
+      );
+      setTimeout(() => { this.alertShow = false; }, 2000);
+      return;
+    }
 
     try {
       // Mark as pending
       this.pendingBookmarks.add(platform);
+      
+      // Show loading alert
+      this.showAlert(
+        'loading',
+        'Processing Transaction',
+        `Adding bookmark for ${username}...`
+      );
+      
       this.cdr.detectChanges();
 
-      if (isCurrentlyBookmarked) {
-        // Show optimistic remove
-        console.log(`🔄 Removing bookmark for ${username}...`);
-        
-        // Remove from blockchain (this will update cache on success)
-        await this.bookmarkService.removeBookmark(platform);
-        console.log(`✅ Bookmark removed for ${username}`);
-      } else {
-        // Show optimistic add
-        console.log(`🔄 Adding bookmark for ${username}...`);
-        
-        // Add to blockchain (this will update cache on success)
-        await this.bookmarkService.addBookmark(platform, {
-          username,
-          avatar,
-          url
-        });
-        console.log(`✅ Bookmark added for ${username}`);
-      }
-    } catch (error: any) {
-      console.error('❌ Error toggling bookmark:', error);
+      await this.bookmarkService.addBookmark(platform, {
+        username,
+        avatar,
+        url
+      });
       
-      // Show user-friendly error message
+      // Show success alert
+      this.showAlert(
+        'success',
+        'Bookmark Added',
+        `Successfully added ${username} to your bookmarks.`
+      );
+      
+      setTimeout(() => { this.alertShow = false; }, 1500);
+    } catch (error: any) {
+      console.error('❌ Error adding bookmark:', error);
+      
+      // Show error alert
       if (error.message.includes('rejected') || error.message.includes('denied')) {
-        console.log('Transaction was rejected by user');
+        this.showAlert(
+          'warning',
+          'Transaction Cancelled',
+          'You cancelled the transaction.'
+        );
       } else if (error.message.includes('Wallet not connected')) {
-        alert('Please connect your wallet first to bookmark profiles.');
+        this.showAlert(
+          'error',
+          'Wallet Not Connected',
+          'Please connect your wallet first to bookmark profiles.'
+        );
       } else {
-        alert(error.message || 'Failed to toggle bookmark. Please try again.');
+        this.showAlert(
+          'error',
+          'Transaction Failed',
+          error.message || 'Failed to add bookmark. Please try again.'
+        );
       }
+      
+      setTimeout(() => { this.alertShow = false; }, 5000);
     } finally {
-      // Remove pending state
       this.pendingBookmarks.delete(platform);
       this.cdr.detectChanges();
     }
   }
 
   /**
-   * Check if a platform is bookmarked (synchronous from cache)
+   * Check if a platform and username is bookmarked (synchronous from cache)
    */
-  isBookmarked(platform: string): boolean {
-    return this.bookmarkService.isBookmarkedSync(platform);
+  isBookmarked(platform: string, username?: string): boolean {
+    const bookmarks = this.bookmarkService.getAllBookmarks();
+    
+    if (!username) {
+      // If no username provided, just check by platform
+      return bookmarks.some(b => b.platform.toLowerCase() === platform.toLowerCase());
+    }
+    
+    // Check by both platform and username
+    return bookmarks.some(
+      b => b.platform.toLowerCase() === platform.toLowerCase() && 
+           b.username.toLowerCase() === username.toLowerCase()
+    );
   }
 
   /**
