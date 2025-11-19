@@ -7,7 +7,7 @@ import {
   http,
   fallback,
 } from 'viem';
-import { baseSepolia } from 'viem/chains';
+import { base, baseSepolia } from 'viem/chains';
 
 export interface BookmarkedProfile {
   platform: string;
@@ -32,11 +32,12 @@ interface ContractBookmark {
 export class Web3BookmarkService implements OnDestroy {
   // Contract Configuration
   private readonly CONTRACT_ADDRESS =
-    '0x56556fE7F6274b0d6748b759cEcA3E113218068C' as const;
+    '0xb8bC0D170F9bF475191D955d06b0c1ab4583734E' as const;
 
   private readonly RPC_ENDPOINTS = [
-    'https://base-sepolia.drpc.org',
-    'https://base-sepolia-rpc.publicnode.com',
+    // 'https://base-sepolia.drpc.org',
+    // 'https://base-sepolia-rpc.publicnode.com',
+    'https://base.llamarpc.com'
   ] as const;
 
   private readonly REQUEST_TIMEOUT = 30000;
@@ -193,7 +194,7 @@ export class Web3BookmarkService implements OnDestroy {
       );
 
       this.publicClient = createPublicClient({
-        chain: baseSepolia,
+        chain: base,
         transport: fallback(transports, { rank: false }),
         batch: { multicall: true },
         cacheTime: 60000,
@@ -247,7 +248,7 @@ export class Web3BookmarkService implements OnDestroy {
       }
 
       this.walletClient = createWalletClient({
-        chain: baseSepolia,
+        chain: base,
         transport: custom(window.ethereum as any),
       });
 
@@ -369,7 +370,7 @@ export class Web3BookmarkService implements OnDestroy {
     try {
       // Add chain verification here
       const current = await this.walletClient.getChainId();
-      if (current !== baseSepolia.id) {
+      if (current !== base.id) {
         await this.switchToBaseSepolia();
       }
 
@@ -393,7 +394,7 @@ export class Web3BookmarkService implements OnDestroy {
         functionName: 'addBookmark',
         args: [platform, username, avatar, url],
         account: this.currentAddress,
-        chain: baseSepolia,
+        chain: base,
       });
 
       console.log('📤 Transaction sent:', hash);
@@ -434,7 +435,7 @@ export class Web3BookmarkService implements OnDestroy {
 
     try {
       const current = await this.walletClient.getChainId();
-      if (current !== baseSepolia.id) {
+      if (current !== base.id) {
         await this.switchToBaseSepolia();
       }
 
@@ -449,7 +450,7 @@ export class Web3BookmarkService implements OnDestroy {
         functionName: 'removeBookmark',
         args: [platform],
         account: this.currentAddress,
-        chain: baseSepolia,
+        chain: base,
       });
 
       console.log('📤 Transaction sent:', hash);
@@ -618,7 +619,7 @@ export class Web3BookmarkService implements OnDestroy {
       throw new Error('Wallet client chưa được khởi tạo');
     }
 
-    const chainId = baseSepolia.id;
+    const chainId = base.id;
 
     try {
       await this.walletClient.switchChain({ id: chainId });
