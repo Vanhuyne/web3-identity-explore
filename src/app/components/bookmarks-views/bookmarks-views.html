@@ -1,134 +1,197 @@
-<div class="min-h-screen bg-gradient-to-b from-[#e9f8fd] to-[#e9f1ff] p-6">
-  <div class="max-w-7xl mx-auto">
-    <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-4xl font-bold text-gray-900 mb-2">My Bookmarks</h1>
-      <p class="text-gray-600">Manage your saved Web3 profiles</p>
-    </div>
-
-    <!-- Wallet Warning -->
-    <div *ngIf="showWalletWarning" class="mb-6">
-      <div class="bg-yellow-500/10 border border-yellow-500 rounded-lg p-4">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <svg class="w-6 h-6 text-yellow-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-            </svg>
-            <div>
-              <p class="text-yellow-700 font-medium">Wallet Not Connected</p>
-              <p class="text-yellow-600 text-sm">Connect your wallet to manage bookmarks</p>
-            </div>
-          </div>
-          <button (click)="openConnectModal()"
-                  class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
-            Connect Wallet
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Loading State -->
-    <div *ngIf="isLoading" class="flex justify-center items-center py-20">
-      <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
-    </div>
-
-    <!-- Error State -->
-    <div *ngIf="error && !isLoading" class="bg-red-500/10 border border-red-500 rounded-lg p-4 mb-6">
-      <div class="flex items-center">
-        <svg class="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-        <p class="text-red-600">{{ error }}</p>
-      </div>
-    </div>
-
-    <!-- Empty State -->
-    <div *ngIf="!isLoading && bookmarks.length === 0" class="text-center py-20">
-      <svg class="w-24 h-24 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+<!-- Wrapper -->
+<div class="min-h-screen bg-gradient-to-b from-[#e9f8fd] to-[#e9f1ff] flex flex-col">
+  <!-- Header -->
+  <div class="fixed top-6 left-6 right-6 z-50 flex items-center justify-between">
+    <a
+      [routerLink]="['/']"
+      class="flex items-center gap-2 hover:opacity-80 transition"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="w-5 h-5 text-blue-600"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18.75"
+        />
       </svg>
-      <h3 class="text-2xl font-semibold text-gray-800 mb-2">No Bookmarks Yet</h3>
-      <p class="text-gray-600 mb-6">Start exploring and bookmark your favorite Web3 profiles</p>
-      <a routerLink="/" class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-        </svg>
-        Explore Profiles
-      </a>
-    </div>
+      <span class="font-semibold text-gray-900">Back to Search</span>
+    </a>
+  </div>
 
-    <!-- Bookmarks Grid -->
-    <div *ngIf="!isLoading && bookmarks.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div *ngFor="let bookmark of bookmarks" 
-           class="bg-white border border-gray-200 rounded-xl p-6 hover:border-blue-500 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20">
-        
-        <!-- Profile Header -->
-        <div class="flex items-start justify-between mb-4">
-          <div class="flex items-center space-x-3">
-            <!-- Avatar -->
-            <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold overflow-hidden"
-                 [ngClass]="bookmark.avatar ? 'bg-transparent' : 'bg-gradient-to-br from-blue-500 to-cyan-500'">
-              <img *ngIf="bookmark.avatar" [src]="bookmark.avatar" [alt]="bookmark.username" class="w-full h-full object-cover">
-              <span *ngIf="!bookmark.avatar">{{ bookmark.username.charAt(0).toUpperCase() || '?' }}</span>
+  <!-- Main Content -->
+  <div class="flex-1 pt-24 px-6 pb-12">
+    <div class="max-w-6xl mx-auto">
+      <!-- Title Section -->
+      <div class="mb-8">
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-2">My Bookmarks</h1>
+        <p class="text-gray-600">
+          Total: <span class="font-semibold">{{ bookmarks.length }}</span>
+        </p>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="bookmarks.length === 0" class="text-center py-16">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          class="w-16 h-16 text-gray-300 mx-auto mb-4"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
+          />
+        </svg>
+        <h3 class="text-xl font-semibold text-gray-600 mb-2">No Bookmarks Yet</h3>
+        <p class="text-gray-500 mb-6">Start bookmarking profiles to see them here</p>
+        <a
+          [routerLink]="['/']"
+          class="inline-block bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition"
+        >
+          Search Profiles
+        </a>
+      </div>
+
+      <!-- Bookmarks Content -->
+      <div *ngIf="bookmarks.length > 0">
+        <!-- Search and Filter Section -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <!-- Search Bar -->
+          <div class="mb-6">
+            <input
+              type="text"
+              [(ngModel)]="searchQuery"
+              (ngModelChange)="onSearch($event)"
+              placeholder="Search by username or platform..."
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <!-- Platform Filter -->
+          <div class="mb-4">
+            <p class="text-sm font-semibold text-gray-700 mb-3">Filter by Platform:</p>
+            <div class="flex flex-wrap gap-2">
+              <button
+                *ngFor="let platform of platforms"
+                (click)="onPlatformChange(platform)"
+                [class.bg-blue-600]="selectedPlatform === platform"
+                [class.text-white]="selectedPlatform === platform"
+                [class.bg-gray-100]="selectedPlatform !== platform"
+                [class.text-gray-700]="selectedPlatform !== platform"
+                class="px-4 py-2 rounded-full font-medium transition hover:shadow-md"
+              >
+                {{ platform === 'all' ? 'All Platforms' : getPlatformDisplayName(platform) }}
+                <span class="ml-2 text-xs">
+                  ({{ getCountByPlatform(platform) }})
+                </span>
+              </button>
             </div>
-            <div>
-              <h3 class="text-lg font-semibold text-gray-900">{{ bookmark.username }}</h3>
-              <p class="text-sm text-gray-600 capitalize">{{ bookmark.platform }}</p>
+          </div>
+
+          <!-- Clear All Button -->
+          <div class="pt-4 border-t border-gray-200">
+            <button
+              (click)="clearAllBookmarks()"
+              class="text-red-600 hover:text-red-700 font-medium text-sm transition"
+            >
+              🗑️ Clear All Bookmarks
+            </button>
+          </div>
+        </div>
+
+        <!-- No Results -->
+        <div *ngIf="filteredBookmarks.length === 0" class="text-center py-12">
+          <p class="text-gray-500">No bookmarks found matching your filters</p>
+        </div>
+
+        <!-- Bookmarks Grid -->
+        <div *ngIf="filteredBookmarks.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div
+            *ngFor="let bookmark of filteredBookmarks"
+            class="bg-white rounded-lg shadow hover:shadow-lg transition overflow-hidden"
+          >
+            <!-- Card Header with Platform -->
+            <div
+              [ngClass]="getColorClasses(bookmark.platform).bg + ' ' + getColorClasses(bookmark.platform).border"
+              class="p-4 border-b-2"
+            >
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                  <i
+                    [class]="'fa ' + getPlatformIcon(bookmark.platform) + ' ' + getColorClasses(bookmark.platform).icon"
+                  ></i>
+                  <span
+                    [ngClass]="getColorClasses(bookmark.platform).text"
+                    class="font-semibold"
+                  >
+                    {{ getPlatformDisplayName(bookmark.platform) }}
+                  </span>
+                </div>
+                <button
+                  (click)="removeBookmark(bookmark.platform)"
+                  class="text-red-500 hover:text-red-700 transition"
+                  title="Remove bookmark"
+                >
+                  <i class="fa fa-trash"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Card Content -->
+            <div class="p-4">
+              <!-- Avatar and Username -->
+              <div class="flex items-center gap-3 mb-4">
+                <img
+                  *ngIf="bookmark.avatar"
+                  [src]="bookmark.avatar"
+                  [alt]="bookmark.username"
+                  class="w-12 h-12 rounded-full object-cover"
+                />
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-gray-900 truncate">
+                    {{ bookmark.username }}
+                  </p>
+                  <p class="text-xs text-gray-500">
+                    Bookmarked {{ formatDate(bookmark.bookmarkedAt) }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Actions -->
+              <div class="flex gap-2">
+                <button
+                  (click)="openBookmark(bookmark.url)"
+                  class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-medium text-sm"
+                >
+                  <i class="fa fa-external-link mr-1"></i>
+                  View
+                </button>
+                <button
+                  (click)="copyToClipboard(bookmark.url)"
+                  class="flex-1 bg-gray-200 text-gray-900 py-2 rounded-lg hover:bg-gray-300 transition font-medium text-sm"
+                >
+                  <i class="fa fa-copy mr-1"></i>
+                  Copy
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Platform Badge -->
-        <div class="mb-4">
-          <span class="inline-flex items-center px-3 py-1 text-xs rounded-full"
-                [ngClass]="{
-                  'bg-blue-500/20 text-blue-700': bookmark.platform === 'farcaster',
-                  'bg-green-500/20 text-green-700': bookmark.platform === 'lens',
-                  'bg-yellow-500/20 text-yellow-700': bookmark.platform === 'ens',
-                  'bg-cyan-500/20 text-cyan-700': bookmark.platform !== 'farcaster' && bookmark.platform !== 'lens' && bookmark.platform !== 'ens'
-                }">
-            {{ bookmark.platform | uppercase }}
-          </span>
-        </div>
-
-        <!-- Timestamp -->
-        <div class="text-xs text-gray-500 mb-4">
-          Saved {{ bookmark.bookmarkedAt | date: 'short' }}
-        </div>
-
-        <!-- Actions -->
-        <div class="flex space-x-2">
-          <a [href]="bookmark.url" target="_blank" rel="noopener noreferrer"
-             class="flex-1 text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors inline-flex items-center justify-center">
-            <span>View Profile</span>
-            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-            </svg>
-          </a>
-          <button (click)="removeBookmark(bookmark.platform)"
-                  class="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-600 text-sm font-medium rounded-lg transition-colors"
-                  title="Remove bookmark">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-            </svg>
-          </button>
+        <!-- Stats Footer -->
+        <div class="mt-8 text-center text-gray-600 text-sm">
+          <p>Showing {{ filteredBookmarks.length }} of {{ bookmarks.length }} bookmarks</p>
         </div>
       </div>
-    </div>
-
-    <!-- Summary -->
-    <div *ngIf="!isLoading && bookmarks.length > 0" class="mt-8 text-center text-gray-600">
-      <p>Total Bookmarks: <span class="text-blue-600 font-semibold">{{ bookmarks.length }}</span></p>
     </div>
   </div>
 </div>
-
-<app-alert-component
-    [show]="alertShow"
-    [type]="alertType"
-    [title]="alertTitle"
-    [message]="alertMessage"
-    [txHash]="alertTxHash"
-    [dismissible]="alertType !== 'loading'"
-    [autoDismiss]="alertType === 'success' ? 3000 : 0">
-  </app-alert-component>

@@ -1,5 +1,4 @@
 import { Component, EventEmitter, Input, Output, SimpleChanges } from '@angular/core';
-import { SearchPlatform, SearchQuery } from '../../models/search';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 

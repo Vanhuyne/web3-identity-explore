@@ -1,19 +1,40 @@
 <!-- Wrapper: full gradient background -->
-<div class="min-h-screen bg-gradient-to-b from-[#e9f8fd] to-[#e9f1ff] flex flex-col justify-center">
-  <div class="fixed top-6 left-6 right-6 z-50 flex items-center justify-between">
+<div
+  class="min-h-screen bg-gradient-to-b from-[#e9f8fd] to-[#e9f1ff] flex flex-col justify-center"
+>
+  <div
+    class="fixed top-6 left-6 right-6 z-50 flex items-center justify-between"
+  >
     <!-- Wallet Connect Component - Left Side -->
     <app-wallet-connect></app-wallet-connect>
 
     <!-- Bookmarks Button - Right Side -->
-    <a [routerLink]="['/bookmarks']" *ngIf="address" 
-       class="flex items-center gap-2 bg-white rounded-full shadow-lg px-4 py-2 hover:shadow-xl transition cursor-pointer">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
-           class="w-5 h-5 text-blue-600">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+    <a
+      [routerLink]="['/bookmarks']"
+      *ngIf="address"
+      class="flex items-center gap-2 bg-white rounded-full shadow-lg px-4 py-2 hover:shadow-xl transition cursor-pointer"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="w-5 h-5 text-blue-600"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
+        />
       </svg>
-      <span class="font-semibold text-gray-900 max-[430px]:hidden">Bookmarks</span>
-      <span *ngIf="bookmarkService.getBookmarksCount() > 0" 
-            class="bg-blue-600 text-white rounded-full px-2 py-0.5 text-xs font-bold min-w-[20px] text-center">
+      <span class="font-semibold text-gray-900 max-[430px]:hidden"
+        >Bookmarks</span
+      >
+      <span
+        *ngIf="bookmarkService.getBookmarksCount() > 0"
+        class="bg-blue-600 text-white rounded-full px-2 py-0.5 text-xs font-bold min-w-[20px] text-center"
+      >
         {{ bookmarkService.getBookmarksCount() }}
       </span>
     </a>
@@ -22,9 +43,10 @@
   <!-- Section chính: chiếm 2/3 chiều cao -->
   <section class="flex flex-col justify-center h-[66vh] px-6">
     <div class="max-w-xl w-full mx-auto text-left">
-
       <!-- Title -->
-      <h1 class="text-4xl font-extrabold text-gray-900 mb-2 max-[430px]:text-3xl">
+      <h1
+        class="text-4xl font-extrabold text-gray-900 mb-2 max-[430px]:text-3xl"
+      >
         Web3 Identity Search
       </h1>
       <p class="text-gray-700 text-lg mb-6 max-[430px]:text-base">
@@ -32,67 +54,84 @@
       </p>
 
       <!-- Search Bar Component with Event Binding -->
-      <app-search-bar-component 
+      <app-search-bar-component
         (search)="handleSearch($event)"
-        (clear)="handleClear()">
+        (clear)="handleClear()"
+      >
       </app-search-bar-component>
 
       <!-- Trending -->
       <div class="mt-6 text-sm text-gray-800 max-[430px]:text-xs">
         <span class="font-semibold">Trending:</span>
         <div class="flex flex-wrap gap-2 mt-2">
-          <button 
+          <button
             (click)="handleSearch('vitalik.eth')"
-            class="flex items-center gap-1 bg-white rounded-full shadow px-3 py-1 hover:shadow-md transition cursor-pointer">
+            class="flex items-center gap-1 bg-white rounded-full shadow px-3 py-1 hover:shadow-md transition cursor-pointer"
+          >
             <img src="assets/icons/ens.jpeg" class="w-4 h-4" alt="icon" />
             vitalik.eth
           </button>
-          <button 
+          <button
             (click)="handleSearch('0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045')"
-            class="flex items-center gap-1 bg-white rounded-full shadow px-3 py-1 hover:shadow-md transition cursor-pointer">
+            class="flex items-center gap-1 bg-white rounded-full shadow px-3 py-1 hover:shadow-md transition cursor-pointer"
+          >
             <img src="assets/icons/eth.png" class="w-4 h-4" alt="icon" />
             0xd8da...6045
           </button>
-          <button 
+          <button
             (click)="handleSearch('dwr.eth')"
-            class="flex items-center gap-1 bg-white rounded-full shadow px-3 py-1 hover:shadow-md transition cursor-pointer">
+            class="flex items-center gap-1 bg-white rounded-full shadow px-3 py-1 hover:shadow-md transition cursor-pointer"
+          >
             <img src="assets/icons/farcaster.webp" class="w-4 h-4" alt="icon" />
             dwr.eth
           </button>
-          <button 
+          <button
             (click)="handleSearch('stani.lens')"
-            class="flex items-center gap-1 bg-white rounded-full shadow px-3 py-1 hover:shadow-md transition cursor-pointer">
+            class="flex items-center gap-1 bg-white rounded-full shadow px-3 py-1 hover:shadow-md transition cursor-pointer"
+          >
             <img src="assets/icons/lens.jpg" class="w-4 h-4" alt="icon" />
             stani.lens
           </button>
-          <button 
+          <button
             (click)="handleSearch('suji_yan')"
-            class="flex items-center gap-1 bg-white rounded-full shadow px-3 py-1 hover:shadow-md transition cursor-pointer">
+            class="flex items-center gap-1 bg-white rounded-full shadow px-3 py-1 hover:shadow-md transition cursor-pointer"
+          >
             <img src="assets/icons/x.png" class="w-4 h-4" alt="icon" />
             suji_yan
           </button>
         </div>
       </div>
-
     </div>
   </section>
 
   <!-- Search Results Section (if displaying on same page) -->
-  <section *ngIf="(identityService.identity$ | async) || (identityService.loading$ | async) || (identityService.error$ | async)" 
-           class="px-6 pb-12">
+  <section
+    *ngIf="
+      (identityService.identity$ | async) ||
+      (identityService.loading$ | async) ||
+      (identityService.error$ | async)
+    "
+    class="px-6 pb-12"
+  >
     <div class="max-w-4xl mx-auto">
-      
       <!-- Loading State -->
       <div *ngIf="identityService.loading$ | async" class="text-center py-12">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div
+          class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"
+        ></div>
         <p class="mt-4 text-gray-600">Searching across Web3 platforms...</p>
       </div>
 
       <!-- Error State -->
-      <div *ngIf="identityService.error$ | async as error" class="max-w-xl mx-auto">
+      <div
+        *ngIf="identityService.error$ | async as error"
+        class="max-w-xl mx-auto"
+      >
         <div class="bg-red-50 border border-red-200 rounded-lg p-4">
           <div class="flex items-start">
-            <i class="fa fa-exclamation-circle text-red-500 text-xl mr-3 mt-0.5"></i>
+            <i
+              class="fa fa-exclamation-circle text-red-500 text-xl mr-3 mt-0.5"
+            ></i>
             <div>
               <h3 class="text-red-800 font-semibold">Error</h3>
               <p class="text-red-700 text-sm mt-1">{{ error }}</p>
@@ -102,207 +141,377 @@
       </div>
 
       <!-- Results -->
-      <div *ngIf="identityService.identity$ | async as identity" class="animate-fadeIn">
+      <div
+        *ngIf="identityService.identity$ | async as identity"
+        class="animate-fadeIn"
+      >
         <div class="bg-white rounded-xl shadow-xl p-6">
           <!-- All Profiles Grid -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Farcaster -->
-            <div *ngIf="identity.farcaster" class="relative p-4 bg-purple-50 rounded-lg border border-purple-100">
-              <button 
+            <div
+              *ngIf="identity.farcaster"
+              class="relative p-4 bg-purple-50 rounded-lg border border-purple-100"
+            >
+              <button
                 (click)="toggleBookmark('farcaster', identity.farcaster)"
-                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
-                     class="w-6 h-6 transition-colors fill-none stroke-purple-400">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                [disabled]="isBookmarkPending('farcaster')"
+                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                [title]="
+                  isBookmarked('farcaster', identity.farcaster.username ?? undefined)
+                    ? 'Remove bookmark'
+                    : 'Add bookmark'
+                "
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  [class]="
+                    'w-6 h-6 transition-all duration-300 ' +
+                    (isBookmarked('farcaster', identity.farcaster.username ?? undefined)
+                      ? 'fill-purple-400 stroke-purple-600'
+                      : 'fill-none stroke-purple-400')
+                  "
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
+                  />
                 </svg>
               </button>
               <div class="flex items-center gap-3">
-                <img 
-                  *ngIf="identity.farcaster.avatar" 
-                  [src]="identity.farcaster.avatar" 
+                <img
+                  *ngIf="identity.farcaster.avatar"
+                  [src]="identity.farcaster.avatar"
                   [alt]="identity.farcaster.username || 'Farcaster'"
-                  class="w-12 h-12 rounded-full">
+                  class="w-12 h-12 rounded-full"
+                />
                 <div class="flex-1">
                   <div class="flex items-center gap-2 mb-1">
                     <i class="fa fa-broadcast-tower text-purple-600"></i>
                     <span class="font-semibold text-purple-900">Farcaster</span>
                   </div>
-                  <p class="text-gray-700 font-medium">{{ identity.farcaster.username }}</p>
-                  <a [href]="identity.farcaster.url" target="_blank" 
-                     class="text-purple-600 hover:underline text-xs">
+                  <p class="text-gray-700 font-medium">
+                    {{ identity.farcaster.username }}
+                  </p>
+                  <a
+                    [href]="identity.farcaster.url"
+                    target="_blank"
+                    class="text-purple-600 hover:underline text-xs"
+                  >
                     View →
                   </a>
                 </div>
               </div>
             </div>
 
-            <!-- ENS -->
-            <div *ngIf="identity.ens" class="relative p-4 bg-blue-50 rounded-lg border border-blue-100">
-              <button 
+            <!-- ENS Card -->
+            <div
+              *ngIf="identity.ens"
+              class="relative p-4 bg-blue-50 rounded-lg border border-blue-100"
+            >
+              <button
                 (click)="toggleBookmark('ens', identity.ens)"
-                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
-                     class="w-6 h-6 transition-colors fill-none stroke-blue-400">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                [disabled]="isBookmarkPending('ens')"
+                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                [title]="
+                  isBookmarked('ens', identity.ens.username ?? undefined)
+                    ? 'Remove bookmark'
+                    : 'Add bookmark'
+                "
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  [class]="
+                    'w-6 h-6 transition-all duration-300 ' +
+                    (isBookmarked('ens', identity.ens.username ?? undefined)
+                      ? 'fill-blue-400 stroke-blue-600'
+                      : 'fill-none stroke-blue-400')
+                  "
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
+                  />
                 </svg>
               </button>
               <div class="flex items-center gap-3">
-                <img 
-                  *ngIf="identity.ens.avatar" 
-                  [src]="identity.ens.avatar" 
+                <img
+                  *ngIf="identity.ens.avatar"
+                  [src]="identity.ens.avatar"
                   [alt]="identity.ens.username || 'ENS'"
-                  class="w-12 h-12 rounded-full">
+                  class="w-12 h-12 rounded-full"
+                />
                 <div class="flex-1">
                   <div class="flex items-center gap-2 mb-1">
                     <i class="fa fa-ethereum text-blue-600"></i>
                     <span class="font-semibold text-blue-900">ENS</span>
                   </div>
-                  <p class="text-gray-700 font-medium">{{ identity.ens.username }}</p>
-                  <a [href]="identity.ens.url" target="_blank" 
-                     class="text-blue-600 hover:underline text-xs">
+                  <p class="text-gray-700 font-medium">
+                    {{ identity.ens.username }}
+                  </p>
+                  <a
+                    [href]="identity.ens.url"
+                    target="_blank"
+                    class="text-blue-600 hover:underline text-xs"
+                  >
                     View →
                   </a>
                 </div>
               </div>
             </div>
 
-            <!-- Twitter -->
-            <div *ngIf="identity.twitter" class="relative p-4 bg-sky-50 rounded-lg border border-sky-100">
-              <button 
+            <!-- Twitter Card -->
+            <div
+              *ngIf="identity.twitter"
+              class="relative p-4 bg-sky-50 rounded-lg border border-sky-100"
+            >
+              <button
                 (click)="toggleBookmark('twitter', identity.twitter)"
-                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
-                     class="w-6 h-6 transition-colors fill-none stroke-sky-400">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                [disabled]="isBookmarkPending('twitter')"
+                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                [title]="
+                  isBookmarked('twitter', identity.twitter.username ?? undefined)
+                    ? 'Remove bookmark'
+                    : 'Add bookmark'
+                "
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  [class]="
+                    'w-6 h-6 transition-all duration-300 ' +
+                    (isBookmarked('twitter', identity.twitter.username ?? undefined)
+                      ? 'fill-sky-400 stroke-sky-600'
+                      : 'fill-none stroke-sky-400')
+                  "
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
+                  />
                 </svg>
               </button>
               <div class="flex items-center gap-3">
-                <img 
-                  *ngIf="identity.twitter.avatar" 
-                  [src]="identity.twitter.avatar" 
+                <img
+                  *ngIf="identity.twitter.avatar"
+                  [src]="identity.twitter.avatar"
                   [alt]="identity.twitter.username || 'Twitter'"
-                  class="w-12 h-12 rounded-full">
+                  class="w-12 h-12 rounded-full"
+                />
                 <div class="flex-1">
                   <div class="flex items-center gap-2 mb-1">
                     <i class="fa fa-twitter text-sky-600"></i>
                     <span class="font-semibold text-sky-900">Twitter</span>
                   </div>
-                  <p class="text-gray-700 font-medium">{{ identity.twitter.username }}</p>
-                  <a [href]="identity.twitter.url" target="_blank" 
-                     class="text-sky-600 hover:underline text-xs">
+                  <p class="text-gray-700 font-medium">
+                    {{ identity.twitter.username }}
+                  </p>
+                  <a
+                    [href]="identity.twitter.url"
+                    target="_blank"
+                    class="text-sky-600 hover:underline text-xs"
+                  >
                     View →
                   </a>
                 </div>
               </div>
             </div>
 
-            <!-- GitHub -->
-            <div *ngIf="identity.github" class="relative p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <button 
+            <!-- GitHub Card -->
+            <div
+              *ngIf="identity.github"
+              class="relative p-4 bg-gray-50 rounded-lg border border-gray-200"
+            >
+              <button
                 (click)="toggleBookmark('github', identity.github)"
-                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
-                     class="w-6 h-6 transition-colors fill-none stroke-gray-400">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                [disabled]="isBookmarkPending('github')"
+                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                [title]="
+                  isBookmarked('github', identity.github.username ?? undefined)
+                    ? 'Remove bookmark'
+                    : 'Add bookmark'
+                "
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  [class]="
+                    'w-6 h-6 transition-all duration-300 ' +
+                    (isBookmarked('github', identity.github.username ?? undefined)
+                      ? 'fill-gray-400 stroke-gray-600'
+                      : 'fill-none stroke-gray-400')
+                  "
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
+                  />
                 </svg>
               </button>
               <div class="flex items-center gap-3">
-                <img 
-                  *ngIf="identity.github.avatar" 
-                  [src]="identity.github.avatar" 
+                <img
+                  *ngIf="identity.github.avatar"
+                  [src]="identity.github.avatar"
                   [alt]="identity.github.username || 'GitHub'"
-                  class="w-12 h-12 rounded-full">
+                  class="w-12 h-12 rounded-full"
+                />
                 <div class="flex-1">
                   <div class="flex items-center gap-2 mb-1">
                     <i class="fa fa-github text-gray-700"></i>
                     <span class="font-semibold text-gray-900">GitHub</span>
                   </div>
-                  <p class="text-gray-700 font-medium">{{ identity.github.username }}</p>
-                  <a [href]="identity.github.url" target="_blank" 
-                     class="text-gray-700 hover:underline text-xs">
+                  <p class="text-gray-700 font-medium">
+                    {{ identity.github.username }}
+                  </p>
+                  <a
+                    [href]="identity.github.url"
+                    target="_blank"
+                    class="text-gray-700 hover:underline text-xs"
+                  >
                     View →
                   </a>
                 </div>
               </div>
             </div>
 
-            <!-- Zora -->
-            <div *ngIf="identity.zora" class="relative p-4 bg-pink-50 rounded-lg border border-pink-100">
-              <button 
+            <!-- Zora Card -->
+            <div
+              *ngIf="identity.zora"
+              class="relative p-4 bg-pink-50 rounded-lg border border-pink-100"
+            >
+              <button
                 (click)="toggleBookmark('zora', identity.zora)"
-                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
-                     class="w-6 h-6 transition-colors fill-none stroke-pink-400">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                [disabled]="isBookmarkPending('zora')"
+                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                [title]="
+                  isBookmarked('zora', identity.zora.username ?? undefined)
+                    ? 'Remove bookmark'
+                    : 'Add bookmark'
+                "
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  [class]="
+                    'w-6 h-6 transition-all duration-300 ' +
+                    (isBookmarked('zora', identity.zora.username ?? undefined)
+                      ? 'fill-pink-400 stroke-pink-600'
+                      : 'fill-none stroke-pink-400')
+                  "
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
+                  />
                 </svg>
               </button>
               <div class="flex items-center gap-3">
-                <img 
-                  *ngIf="identity.zora.avatar" 
-                  [src]="identity.zora.avatar" 
+                <img
+                  *ngIf="identity.zora.avatar"
+                  [src]="identity.zora.avatar"
                   [alt]="identity.zora.username || 'Zora'"
-                  class="w-12 h-12 rounded-full">
+                  class="w-12 h-12 rounded-full"
+                />
                 <div class="flex-1">
                   <div class="flex items-center gap-2 mb-1">
                     <i class="fa fa-palette text-pink-600"></i>
                     <span class="font-semibold text-pink-900">Zora</span>
                   </div>
-                  <p class="text-gray-700 font-medium">{{ identity.zora.username }}</p>
-                  <a [href]="identity.zora.url" target="_blank" 
-                     class="text-pink-600 hover:underline text-xs">
+                  <p class="text-gray-700 font-medium">
+                    {{ identity.zora.username }}
+                  </p>
+                  <a
+                    [href]="identity.zora.url"
+                    target="_blank"
+                    class="text-pink-600 hover:underline text-xs"
+                  >
                     View →
                   </a>
                 </div>
               </div>
             </div>
 
-            <!-- Lens -->
-            <div *ngIf="identity.lens" class="relative p-4 bg-green-50 rounded-lg border border-green-100">
-              <button 
+            <!-- Lens Card -->
+            <div
+              *ngIf="identity.lens"
+              class="relative p-4 bg-green-50 rounded-lg border border-green-100"
+            >
+              <button
                 (click)="toggleBookmark('lens', identity.lens)"
-                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
-                     class="w-6 h-6 transition-colors fill-none stroke-green-400">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                [disabled]="isBookmarkPending('lens')"
+                class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                [title]="
+                  isBookmarked('lens', identity.lens.username ?? undefined)
+                    ? 'Remove bookmark'
+                    : 'Add bookmark'
+                "
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  [class]="
+                    'w-6 h-6 transition-all duration-300 ' +
+                    (isBookmarked('lens', identity.lens.username ?? undefined)
+                      ? 'fill-green-400 stroke-green-600'
+                      : 'fill-none stroke-green-400')
+                  "
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
+                  />
                 </svg>
               </button>
               <div class="flex items-center gap-3">
-                <img 
-                  *ngIf="identity.lens.avatar" 
-                  [src]="identity.lens.avatar" 
+                <img
+                  *ngIf="identity.lens.avatar"
+                  [src]="identity.lens.avatar"
                   [alt]="identity.lens.username || 'Lens'"
-                  class="w-12 h-12 rounded-full">
+                  class="w-12 h-12 rounded-full"
+                />
                 <div class="flex-1">
                   <div class="flex items-center gap-2 mb-1">
                     <i class="fa fa-leaf text-green-600"></i>
-                    <span class="font-semibold text-green-900">Lens Protocol</span>
+                    <span class="font-semibold text-green-900"
+                      >Lens Protocol</span
+                    >
                   </div>
-                  <p class="text-gray-700 font-medium">{{ identity.lens.username }}</p>
-                  <a [href]="identity.lens.url" target="_blank" 
-                     class="text-green-600 hover:underline text-xs">
+                  <p class="text-gray-700 font-medium">
+                    {{ identity.lens.username }}
+                  </p>
+                  <a
+                    [href]="identity.lens.url"
+                    target="_blank"
+                    class="text-green-600 hover:underline text-xs"
+                  >
                     View →
                   </a>
                 </div>
               </div>
             </div>
           </div>
-
         </div>
       </div>
-
     </div>
   </section>
-  
 </div>
-
-<app-alert-component
-  [show]="alertShow"
-  [type]="alertType"
-  [title]="alertTitle"
-  [message]="alertMessage"
-  [txHash]="alertTxHash"
-  [dismissible]="alertType !== 'loading'"
-  [autoDismiss]="alertType === 'success' ? 3000 : 0">
-</app-alert-component>
-
 

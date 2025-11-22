@@ -5,15 +5,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
-import { Web3BookmarkService } from '../../services/web3-bookmark-service';
 import { appKit } from '../../config/wallet.config';
 import { WalletConnect } from "../wallet-connect/wallet-connect";
-import { AlertComponent, AlertType } from '../alert-component/alert-component';
+import { BookmarkService } from '../../services/bookmark-service';
 
 @Component({
   selector: 'app-home-component',
   standalone: true,
-  imports: [CommonModule, FormsModule, SearchBarComponent, RouterLink, WalletConnect, AlertComponent],
+  imports: [CommonModule, FormsModule, SearchBarComponent, RouterLink, WalletConnect],
   templateUrl: './home-component.html',
   styleUrl: './home-component.css',
 })
@@ -24,18 +23,11 @@ export class HomeComponent {
   
   // Track pending transactions for UI feedback
   pendingBookmarks = new Set<string>();
-  
-  // Alert state
-  alertShow: boolean = false;
-  alertType: AlertType = 'info';
-  alertTitle: string = '';
-  alertMessage: string = '';
-  alertTxHash: string = '';
 
   constructor(
     public identityService: IdentityService,
     private router: Router,
-    public bookmarkService: Web3BookmarkService,
+    public bookmarkService: BookmarkService,
     private zone: NgZone,
     private cdr: ChangeDetectorRef
   ) {}
@@ -126,21 +118,14 @@ export class HomeComponent {
   }
 
   /**
-   * Show alert notification
-   */
-  private showAlert(type: AlertType, title: string, message: string, txHash: string = ''): void {
-    this.alertType = type;
-    this.alertTitle = title;
-    this.alertMessage = message;
-    this.alertTxHash = txHash;
-    this.alertShow = true;
-    this.cdr.detectChanges();
-  }
-
-  /**
-   * Add bookmark for a platform with alerts
+   * Toggle bookmark - add if not exists, remove if exists
    */
   async toggleBookmark(platform: string, profile: any): Promise<void> {
+    if (!this.address) {
+      console.log('❌ Wallet not connected');
+      return;
+    }
+
     if (this.pendingBookmarks.has(platform)) {
       console.log('⏳ Transaction already pending for', platform);
       return;
@@ -153,69 +138,26 @@ export class HomeComponent {
     // Check if this specific profile is already bookmarked
     const isCurrentlyBookmarked = this.isBookmarked(platform, username);
     
-    if (isCurrentlyBookmarked) {
-      console.log('Already bookmarked:', username);
-      this.showAlert(
-        'info',
-        'Already Bookmarked',
-        `${username} is already in your bookmarks.`
-      );
-      setTimeout(() => { this.alertShow = false; }, 2000);
-      return;
-    }
-
     try {
       // Mark as pending
       this.pendingBookmarks.add(platform);
-      
-      // Show loading alert
-      this.showAlert(
-        'loading',
-        'Processing Transaction',
-        `Adding bookmark for ${username}...`
-      );
-      
       this.cdr.detectChanges();
 
-      await this.bookmarkService.addBookmark(platform, {
-        username,
-        avatar,
-        url
-      });
-      
-      // Show success alert
-      this.showAlert(
-        'success',
-        'Bookmark Added',
-        `Successfully added ${username} to your bookmarks.`
-      );
-      
-      setTimeout(() => { this.alertShow = false; }, 1500);
-    } catch (error: any) {
-      console.error('❌ Error adding bookmark:', error);
-      
-      // Show error alert
-      if (error.message.includes('rejected') || error.message.includes('denied')) {
-        this.showAlert(
-          'warning',
-          'Transaction Cancelled',
-          'You cancelled the transaction.'
-        );
-      } else if (error.message.includes('Wallet not connected')) {
-        this.showAlert(
-          'error',
-          'Wallet Not Connected',
-          'Please connect your wallet first to bookmark profiles.'
-        );
+      if (isCurrentlyBookmarked) {
+        // Remove bookmark
+        await this.bookmarkService.removeBookmark(platform);
+        console.log('✅ Bookmark removed:', username);
       } else {
-        this.showAlert(
-          'error',
-          'Transaction Failed',
-          error.message || 'Failed to add bookmark. Please try again.'
-        );
+        // Add bookmark
+        await this.bookmarkService.addBookmark(platform, {
+          username,
+          avatar,
+          url
+        });
+        console.log('✅ Bookmark added:', username);
       }
-      
-      setTimeout(() => { this.alertShow = false; }, 5000);
+    } catch (error: any) {
+      console.error('❌ Error toggling bookmark:', error);
     } finally {
       this.pendingBookmarks.delete(platform);
       this.cdr.detectChanges();
