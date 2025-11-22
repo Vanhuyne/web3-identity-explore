@@ -8,7 +8,7 @@ import { SearchPlatform, SearchQuery } from '../models/search';
   providedIn: 'root'
 })
 export class IdentityService {
-   private identitySubject = new BehaviorSubject<GroupedIdentity | null>(null);
+  private identitySubject = new BehaviorSubject<GroupedIdentity | null>(null);
   private loadingSubject = new BehaviorSubject<boolean>(false);
   private errorSubject = new BehaviorSubject<string | null>(null);
 

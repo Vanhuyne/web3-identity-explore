@@ -6,6 +6,7 @@
     <input
       type="text"
       [(ngModel)]="searchQuery"
+      (ngModelChange)="onInputChange()"
       placeholder="Search by wallet, ENS, username, FID..."
       (keyup.enter)="onSearch()"
       class="flex-grow bg-transparent outline-none text-gray-700 text-base placeholder-gray-400 max-[430px]:text-sm"

@@ -12,7 +12,10 @@ import { FormsModule } from '@angular/forms';
 export class SearchBarComponent {
   @Output() search = new EventEmitter<string>();
   @Output() clear = new EventEmitter<void>();
+  @Output() connectWallet = new EventEmitter<void>();
   @Input() searchQuery: string = '';
+  @Output() searchQueryChange = new EventEmitter<string>(); // Add this for two-way binding
+  @Input() isWalletConnected: boolean = false;
 
   ngOnChanges(changes: SimpleChanges): void {
     // Update local searchQuery when input changes (e.g., from trending clicks)
@@ -22,6 +25,11 @@ export class SearchBarComponent {
   }
 
   onSearch(): void {
+    if (!this.isWalletConnected) {
+      this.connectWallet.emit();
+      return;
+    }
+
     if (this.searchQuery.trim()) {
       this.search.emit(this.searchQuery.trim());
     }
@@ -29,7 +37,12 @@ export class SearchBarComponent {
 
   onClear(): void {
     this.searchQuery = '';
+    this.searchQueryChange.emit(this.searchQuery); // Emit the change for two-way binding
     this.clear.emit();
+  }
+
+  onInputChange(): void {
+    this.searchQueryChange.emit(this.searchQuery); // Emit changes as user types
   }
 
   isSearchDisabled(): boolean {

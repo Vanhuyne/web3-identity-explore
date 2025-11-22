@@ -8,11 +8,12 @@ import { Subject, takeUntil } from 'rxjs';
 import { appKit } from '../../config/wallet.config';
 import { WalletConnect } from "../wallet-connect/wallet-connect";
 import { BookmarkService } from '../../services/bookmark-service';
+import { SearchResults } from '../search-results/search-results';
 
 @Component({
   selector: 'app-home-component',
   standalone: true,
-  imports: [CommonModule, FormsModule, SearchBarComponent, RouterLink, WalletConnect],
+  imports: [CommonModule, FormsModule, SearchBarComponent, RouterLink, WalletConnect, SearchResults],
   templateUrl: './home-component.html',
   styleUrl: './home-component.css',
 })
@@ -111,6 +112,11 @@ export class HomeComponent {
 
   handleSearch(query: string): void {
     // Clear any previous search results
+    if (!this.address) {
+    console.log('❌ Wallet not connected, opening connect modal');
+    this.openConnectModal();
+    return;
+  }
     this.identityService.clearIdentity();
 
     // Perform the search across all platforms
