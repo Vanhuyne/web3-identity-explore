@@ -142,9 +142,11 @@ export class BookmarksViews {
   /**
    * Remove a bookmark
    */
-  async removeBookmark(platform: string): Promise<void> {
+  async removeBookmark(bookmark: BookmarkedProfile): Promise<void> {
     try {
-      await this.bookmarkService.removeBookmark(platform);
+      // Remove by platform (the bookmark service uses platform as the key)
+      await this.bookmarkService.removeBookmark(bookmark.platform);
+      console.log('✅ Bookmark removed:', bookmark.username);
     } catch (error: any) {
       console.error('Error removing bookmark:', error);
     }
@@ -174,10 +176,6 @@ export class BookmarksViews {
    * Clear all bookmarks
    */
   async clearAllBookmarks(): Promise<void> {
-    const confirmed = confirm('Are you sure you want to clear all bookmarks? This action cannot be undone.');
-    
-    if (!confirmed) return;
-
     try {
       await this.bookmarkService.clearAllBookmarks();
     } catch (error: any) {
