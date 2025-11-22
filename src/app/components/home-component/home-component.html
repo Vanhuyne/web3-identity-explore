@@ -5,7 +5,7 @@
     <app-wallet-connect></app-wallet-connect>
 
     <!-- Bookmarks Button - Right Side -->
-    <a [routerLink]="['/bookmarks']" 
+    <a [routerLink]="['/bookmarks']" *ngIf="address" 
        class="flex items-center gap-2 bg-white rounded-full shadow-lg px-4 py-2 hover:shadow-xl transition cursor-pointer">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
            class="w-5 h-5 text-blue-600">
