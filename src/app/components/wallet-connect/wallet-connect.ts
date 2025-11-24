@@ -60,7 +60,6 @@ export class WalletConnect implements OnInit, OnDestroy {
 
     // Listen to wallet account changes
     appKit.subscribeAccount((account: any) => {
-      console.log('Wallet account event:', account?.address || 'disconnected');
       accountSubject.next(account?.address ? (account.address as string) : null);
     });
   }
@@ -71,7 +70,6 @@ export class WalletConnect implements OnInit, OnDestroy {
   private handleAccountChange(address: string | null): void {
     // Prevent processing same address multiple times
     if (address === this.lastProcessedAddress) {
-      console.log('⚠️ Skipping duplicate address processing:', address);
       return;
     }
 
@@ -81,12 +79,6 @@ export class WalletConnect implements OnInit, OnDestroy {
       this.address = address;
       this.isConnected = !!address;
       this.cdr.detectChanges();
-
-      if (address) {
-        console.log('✅ Wallet connected:', address);
-      } else {
-        console.log('👋 Wallet disconnected');
-      }
     });
   }
 
@@ -109,7 +101,6 @@ export class WalletConnect implements OnInit, OnDestroy {
         this.isConnected = false;
         this.lastProcessedAddress = null;
         this.cdr.detectChanges();
-        console.log('👋 Wallet disconnected');
       });
     } catch (error) {
       console.error('❌ Error disconnecting wallet:', error);
@@ -132,7 +123,6 @@ export class WalletConnect implements OnInit, OnDestroy {
 
     try {
       await navigator.clipboard.writeText(this.address);
-      console.log('📋 Address copied to clipboard');
     } catch (error) {
       console.error('❌ Failed to copy address:', error);
     }

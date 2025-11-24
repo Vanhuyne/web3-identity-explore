@@ -38,7 +38,6 @@ export class HomeComponent {
     this.bookmarkService.bookmarks$
       .pipe(takeUntil(this.destroy$))
       .subscribe((bookmarks) => {
-        console.log('Current bookmarks:', bookmarks);
         // Clear pending state when bookmarks update
         this.pendingBookmarks.clear();
         this.cdr.detectChanges();
@@ -50,13 +49,11 @@ export class HomeComponent {
       this.zone.run(() => {
         this.address = currentAccount.address as string;
         this.cdr.detectChanges();
-        console.log('Restored session with address:', this.address);
       });
 
       // Initialize Web3BookmarkService with wallet address
       try {
         await this.bookmarkService.initializeWithWallet(currentAccount.address as string);
-        console.log('✅ Web3BookmarkService initialized');
       } catch (error) {
         console.error('❌ Error initializing Web3BookmarkService:', error);
       }
@@ -64,26 +61,21 @@ export class HomeComponent {
 
     // ✅ Listen to account changes
     appKit.subscribeAccount(async (account: any) => {
-      console.log('Account subscription fired:', account);
-      
       setTimeout(async () => {
         this.zone.run(() => {
           this.address = account?.address ? (account.address as string) : null;
           this.cdr.detectChanges();
-          console.log('Account changed:', this.address);
         });
 
         // Initialize or cleanup bookmark service based on wallet connection
         if (this.address) {
           try {
             await this.bookmarkService.initializeWithWallet(this.address);
-            console.log('✅ Web3BookmarkService re-initialized');
           } catch (error) {
             console.error('❌ Error initializing Web3BookmarkService:', error);
           }
         } else {
           this.bookmarkService.cleanup();
-          console.log('🧹 Web3BookmarkService cleaned up');
         }
       }, 100);
     });
@@ -105,7 +97,6 @@ export class HomeComponent {
 
   handleClear(): void {
     // Clear the search input and results
-    console.log('Clearing search');
     this.currentSearchQuery = '';
     this.identityService.clearIdentity();
   }
@@ -113,7 +104,6 @@ export class HomeComponent {
   handleSearch(query: string): void {
     // Clear any previous search results
     if (!this.address) {
-    console.log('❌ Wallet not connected, opening connect modal');
     this.openConnectModal();
     return;
   }
@@ -128,12 +118,10 @@ export class HomeComponent {
    */
   async toggleBookmark(platform: string, profile: any): Promise<void> {
     if (!this.address) {
-      console.log('❌ Wallet not connected');
       return;
     }
 
     if (this.pendingBookmarks.has(platform)) {
-      console.log('⏳ Transaction already pending for', platform);
       return;
     }
 
@@ -152,7 +140,6 @@ export class HomeComponent {
       if (isCurrentlyBookmarked) {
         // Remove bookmark
         await this.bookmarkService.removeBookmark(platform);
-        console.log('✅ Bookmark removed:', username);
       } else {
         // Add bookmark
         await this.bookmarkService.addBookmark(platform, {
@@ -160,7 +147,6 @@ export class HomeComponent {
           avatar,
           url
         });
-        console.log('✅ Bookmark added:', username);
       }
     } catch (error: any) {
       console.error('❌ Error toggling bookmark:', error);
@@ -200,7 +186,6 @@ export class HomeComponent {
    */
   viewAllBookmarks(): void {
     const bookmarks = this.bookmarkService.getAllBookmarks();
-    console.log('All bookmarks:', bookmarks);
     // Navigate to bookmarks page
     this.router.navigate(['/bookmarks']);
   }
@@ -211,7 +196,6 @@ export class HomeComponent {
   async refreshBookmarks(): Promise<void> {
     try {
       await this.bookmarkService.refreshBookmarks();
-      console.log('✅ Bookmarks refreshed from blockchain');
     } catch (error) {
       console.error('❌ Error refreshing bookmarks:', error);
     }

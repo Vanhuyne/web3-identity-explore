@@ -38,7 +38,6 @@ export class BookmarkService {
    */
   async initializeWithWallet(address: string): Promise<void> {
     this.walletAddress = address;
-    console.log('💼 Web3BookmarkService initialized with wallet:', address);
     
     // Load bookmarks from localStorage
     this.initializeFromLocalStorage();
@@ -58,7 +57,6 @@ export class BookmarkService {
       if (stored) {
         const bookmarks = JSON.parse(stored) as BookmarkedProfile[];
         this.bookmarksSubject.next(bookmarks);
-        console.log('✅ Loaded bookmarks from localStorage:', bookmarks.length);
       } else {
         this.bookmarksSubject.next([]);
       }
@@ -85,7 +83,6 @@ export class BookmarkService {
       const walletKey = this.getStorageKey();
       localStorage.setItem(walletKey, JSON.stringify(bookmarks));
       this.bookmarksSubject.next(bookmarks);
-      console.log('💾 Bookmarks saved to localStorage');
     } catch (error) {
       console.error('❌ Error saving bookmarks to localStorage:', error);
       this.errorSubject.next('Failed to save bookmarks');
@@ -136,8 +133,6 @@ export class BookmarkService {
       // Save locally
       const updatedBookmarks = [...currentBookmarks, newBookmark];
       this.saveToLocalStorage(updatedBookmarks);
-      
-      console.log('✅ Bookmark added:', newBookmark);
     } catch (error: any) {
       console.error('❌ Error adding bookmark:', error);
       this.errorSubject.next(error.message || 'Failed to add bookmark');
@@ -169,7 +164,6 @@ export class BookmarkService {
       // Example: await this.removeFromBlockchain(platform);
 
       this.saveToLocalStorage(updatedBookmarks);
-      console.log('✅ Bookmark removed');
     } catch (error: any) {
       console.error('❌ Error removing bookmark:', error);
       this.errorSubject.next(error.message || 'Failed to remove bookmark');
@@ -226,7 +220,6 @@ export class BookmarkService {
       const walletKey = this.getStorageKey();
       localStorage.removeItem(walletKey);
       this.bookmarksSubject.next([]);
-      console.log('🧹 All bookmarks cleared');
     } catch (error) {
       console.error('❌ Error clearing bookmarks:', error);
       this.errorSubject.next('Failed to clear bookmarks');
@@ -242,7 +235,6 @@ export class BookmarkService {
     
     // Prevent excessive refreshing
     if (now - this.lastCacheTime < this.CACHE_DURATION) {
-      console.log('⏭️ Using cached bookmarks');
       return;
     }
 
@@ -258,7 +250,6 @@ export class BookmarkService {
       // Then merge or validate against blockchain
 
       this.lastCacheTime = now;
-      console.log('🔄 Bookmarks refreshed');
     } catch (error: any) {
       console.error('❌ Error refreshing bookmarks:', error);
       this.errorSubject.next(error.message || 'Failed to refresh bookmarks');
@@ -293,7 +284,6 @@ export class BookmarkService {
       });
 
       this.saveToLocalStorage(bookmarks);
-      console.log('✅ Bookmarks imported successfully');
     } catch (error: any) {
       console.error('❌ Error importing bookmarks:', error);
       this.errorSubject.next(error.message || 'Failed to import bookmarks');
@@ -329,6 +319,5 @@ export class BookmarkService {
     this.bookmarksSubject.next([]);
     this.errorSubject.next(null);
     this.loadingSubject.next(false);
-    console.log('🧹 Web3BookmarkService cleaned up');
   }
 }

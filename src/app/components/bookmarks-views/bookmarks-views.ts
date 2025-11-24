@@ -42,7 +42,6 @@ export class BookmarksViews {
     this.bookmarkService.bookmarks$
       .pipe(takeUntil(this.destroy$))
       .subscribe((bookmarks) => {
-        console.log('Bookmarks updated:', bookmarks);
         this.bookmarks = bookmarks;
         this.applyFilters();
         this.cdr.detectChanges();
@@ -146,7 +145,6 @@ export class BookmarksViews {
     try {
       // Remove by platform (the bookmark service uses platform as the key)
       await this.bookmarkService.removeBookmark(bookmark.platform);
-      console.log('✅ Bookmark removed:', bookmark.username);
     } catch (error: any) {
       console.error('Error removing bookmark:', error);
     }
