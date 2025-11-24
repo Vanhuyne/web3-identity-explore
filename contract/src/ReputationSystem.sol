@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 contract ReputationSystem {
     
@@ -45,5 +45,10 @@ contract ReputationSystem {
         hasReviewed[_target][msg.sender] = true;
 
         emit NoteAdded(_target, msg.sender, _score);
+    }
+    function getAverageScore(address _target) public view returns (uint256) {
+        uint256 count = reviewCount[_target];
+        if (count == 0) return 0;
+        return (totalScore[_target] * 100) / count;
     }
 }
