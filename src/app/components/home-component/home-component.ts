@@ -111,6 +111,14 @@ export class HomeComponent {
 
     // Perform the search across all platforms
     this.identityService.searchIdentity(query);
+    setTimeout(() => {
+      this.identityService.identity$.pipe(takeUntil(this.destroy$)).subscribe(identity => {
+        if (identity) {
+          console.log('🔍 Search completed for:', query);
+          console.log('Identity:', identity);
+        }
+      });
+    }, 100);
   }
 
   /**

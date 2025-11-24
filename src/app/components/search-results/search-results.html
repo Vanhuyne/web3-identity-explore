@@ -387,6 +387,66 @@
               </div>
             </div>
           </div>
+
+          <!-- Ethereum Card -->
+          <div
+            *ngIf="identity.ethereum"
+            class="relative p-4 bg-indigo-50 rounded-lg border border-indigo-100"
+          >
+            <button
+              (click)="onToggleBookmark('ethereum', identity.ethereum)"
+              [disabled]="isBookmarkPending('ethereum')"
+              class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+              [title]="
+                isBookmarked('ethereum', identity.ethereum.username ?? undefined)
+                  ? 'Remove bookmark'
+                  : 'Add bookmark'
+              "
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                [class]="
+                  'w-6 h-6 transition-all duration-300 ' +
+                  (isBookmarked('ethereum', identity.ethereum.username ?? undefined)
+                    ? 'fill-indigo-400 stroke-indigo-600'
+                    : 'fill-none stroke-indigo-400')
+                "
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
+                />
+              </svg>
+            </button>
+            <div class="flex items-center gap-3">
+              <img
+                *ngIf="identity.ethereum.avatar"
+                [src]="identity.ethereum.avatar"
+                [alt]="identity.ethereum.username || 'Ethereum'"
+                class="w-12 h-12 rounded-full"
+              />
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <i class="fa fa-ethereum text-indigo-600"></i>
+                  <span class="font-semibold text-indigo-900">Ethereum</span>
+                </div>
+                <p class="text-gray-700 font-medium">
+                  {{ identity.ethereum.username }}
+                </p>
+                <a
+                  [href]="identity.ethereum.url"
+                  target="_blank"
+                  class="text-indigo-600 hover:underline text-xs"
+                >
+                  View →
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

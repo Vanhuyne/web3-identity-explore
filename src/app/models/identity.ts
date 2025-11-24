@@ -28,6 +28,6 @@ export interface GroupedIdentity {
   twitter: IdentityProfile | null;
   zora: IdentityProfile | null;
   lens: IdentityProfile | null;
-  telegram: IdentityProfile | null;
+  ethereum: IdentityProfile | null;
   allProfiles: IdentityProfile[];
 }

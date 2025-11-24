@@ -98,7 +98,7 @@ export class IdentityService {
       twitter: null,
       zora: null,
       lens: null,
-      telegram: null,
+      ethereum: null,
       allProfiles: profiles
     };
 
@@ -122,8 +122,8 @@ export class IdentityService {
         case 'lens':
           grouped.lens = profile;
           break;
-        case 'telegram':
-          grouped.telegram = profile;
+        case 'ethereum':
+          grouped.ethereum = profile;
           break;
       }
     });
