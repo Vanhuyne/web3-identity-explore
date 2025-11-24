@@ -29,5 +29,9 @@ export interface GroupedIdentity {
   zora: IdentityProfile | null;
   lens: IdentityProfile | null;
   ethereum: IdentityProfile | null;
+  solana: IdentityProfile | null;
+  basenames: IdentityProfile | null;
+  email: IdentityProfile | null;
+  website: IdentityProfile | null;
   allProfiles: IdentityProfile[];
 }

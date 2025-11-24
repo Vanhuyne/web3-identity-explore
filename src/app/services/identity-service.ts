@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { GroupedIdentity, IdentityProfile } from '../models/identity';
 import { BehaviorSubject, catchError, forkJoin, map, Observable, of } from 'rxjs';
 import { MemoryApiService } from './memory-api-service';
-import { SearchPlatform, SearchQuery } from '../models/search';
 
 @Injectable({
   providedIn: 'root'
@@ -99,6 +98,10 @@ export class IdentityService {
       zora: null,
       lens: null,
       ethereum: null,
+      solana: null,
+      basenames: null,
+      email: null,
+      website: null,
       allProfiles: profiles
     };
 
@@ -124,6 +127,18 @@ export class IdentityService {
           break;
         case 'ethereum':
           grouped.ethereum = profile;
+          break;
+        case 'solana':
+          grouped.solana = profile;
+          break;
+        case 'basenames':
+          grouped.basenames = profile;
+          break;
+        case 'email':
+          grouped.email = profile;
+          break;
+        case 'website':
+          grouped.website = profile;
           break;
       }
     });

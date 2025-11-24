@@ -426,7 +426,7 @@
               <img
                 *ngIf="identity.ethereum.avatar"
                 [src]="identity.ethereum.avatar"
-                [alt]="identity.ethereum.username || 'Ethereum'"
+                [alt]="identity.ethereum.id || 'Ethereum'"
                 class="w-12 h-12 rounded-full"
               />
               <div class="flex-1">
@@ -434,8 +434,8 @@
                   <i class="fa fa-ethereum text-indigo-600"></i>
                   <span class="font-semibold text-indigo-900">Ethereum</span>
                 </div>
-                <p class="text-gray-700 font-medium">
-                  {{ identity.ethereum.username }}
+                <p class="text-gray-700 font-medium text-xs break-all">
+                  {{ identity.ethereum.id }}
                 </p>
                 <a
                   [href]="identity.ethereum.url"
@@ -443,6 +443,227 @@
                   class="text-indigo-600 hover:underline text-xs"
                 >
                   View →
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Solana Card -->
+          <div
+            *ngIf="identity.solana"
+            class="relative p-4 bg-violet-50 rounded-lg border border-violet-100"
+          >
+            <button
+              (click)="onToggleBookmark('solana', identity.solana)"
+              [disabled]="isBookmarkPending('solana')"
+              class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+              [title]="
+                isBookmarked('solana', identity.solana.username ?? undefined)
+                  ? 'Remove bookmark'
+                  : 'Add bookmark'
+              "
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                [class]="
+                  'w-6 h-6 transition-all duration-300 ' +
+                  (isBookmarked('solana', identity.solana.username ?? undefined)
+                    ? 'fill-violet-400 stroke-violet-600'
+                    : 'fill-none stroke-violet-400')
+                "
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
+                />
+              </svg>
+            </button>
+            <div class="flex items-center gap-3">
+              <img
+                *ngIf="identity.solana.avatar"
+                [src]="identity.solana.avatar"
+                [alt]="identity.solana.id || 'Solana'"
+                class="w-12 h-12 rounded-full"
+              />
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <i class="fa fa-circle text-violet-600"></i>
+                  <span class="font-semibold text-violet-900">Solana</span>
+                </div>
+                <p class="text-gray-700 font-medium text-xs break-all">
+                  {{ identity.solana.id }}
+                </p>
+                <a
+                  [href]="identity.solana.url"
+                  target="_blank"
+                  class="text-violet-600 hover:underline text-xs"
+                >
+                  View →
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Basenames Card -->
+          <div
+            *ngIf="identity.basenames"
+            class="relative p-4 bg-blue-50 rounded-lg border border-blue-100"
+          >
+            <button
+              (click)="onToggleBookmark('basenames', identity.basenames)"
+              [disabled]="isBookmarkPending('basenames')"
+              class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+              [title]="
+                isBookmarked('basenames', identity.basenames.username ?? undefined)
+                  ? 'Remove bookmark'
+                  : 'Add bookmark'
+              "
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                [class]="
+                  'w-6 h-6 transition-all duration-300 ' +
+                  (isBookmarked('basenames', identity.basenames.username ?? undefined)
+                    ? 'fill-blue-400 stroke-blue-600'
+                    : 'fill-none stroke-blue-400')
+                "
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
+                />
+              </svg>
+            </button>
+            <div class="flex items-center gap-3">
+              <img
+                *ngIf="identity.basenames.avatar"
+                [src]="identity.basenames.avatar"
+                [alt]="identity.basenames.id || 'Basenames'"
+                class="w-12 h-12 rounded-full"
+              />
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <i class="fa fa-globe text-blue-600"></i>
+                  <span class="font-semibold text-blue-900">Basenames</span>
+                </div>
+                <p class="text-gray-700 font-medium">
+                  {{ identity.basenames.id }}
+                </p>
+                <a
+                  [href]="identity.basenames.url"
+                  target="_blank"
+                  class="text-blue-600 hover:underline text-xs"
+                >
+                  View →
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Email Card -->
+          <div
+            *ngIf="identity.email"
+            class="relative p-4 bg-amber-50 rounded-lg border border-amber-100"
+          >
+            <button
+              (click)="onToggleBookmark('email', identity.email)"
+              [disabled]="isBookmarkPending('email')"
+              class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+              [title]="
+                isBookmarked('email', identity.email.id ?? undefined)
+                  ? 'Remove bookmark'
+                  : 'Add bookmark'
+              "
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                [class]="
+                  'w-6 h-6 transition-all duration-300 ' +
+                  (isBookmarked('email', identity.email.id ?? undefined)
+                    ? 'fill-amber-400 stroke-amber-600'
+                    : 'fill-none stroke-amber-400')
+                "
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
+                />
+              </svg>
+            </button>
+            <div class="flex items-center gap-3">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <i class="fa fa-envelope text-amber-600"></i>
+                  <span class="font-semibold text-amber-900">Email</span>
+                </div>
+                <p class="text-gray-700 font-medium text-sm break-all">
+                  {{ identity.email.id }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Website Card -->
+          <div
+            *ngIf="identity.website"
+            class="relative p-4 bg-teal-50 rounded-lg border border-teal-100"
+          >
+            <button
+              (click)="onToggleBookmark('website', identity.website)"
+              [disabled]="isBookmarkPending('website')"
+              class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+              [title]="
+                isBookmarked('website', identity.website.id ?? undefined)
+                  ? 'Remove bookmark'
+                  : 'Add bookmark'
+              "
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                [class]="
+                  'w-6 h-6 transition-all duration-300 ' +
+                  (isBookmarked('website', identity.website.id ?? undefined)
+                    ? 'fill-teal-400 stroke-teal-600'
+                    : 'fill-none stroke-teal-400')
+                "
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
+                />
+              </svg>
+            </button>
+            <div class="flex items-center gap-3">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <i class="fa fa-link text-teal-600"></i>
+                  <span class="font-semibold text-teal-900">Website</span>
+                </div>
+                <p class="text-gray-700 font-medium text-sm break-all">
+                  {{ identity.website.id }}
+                </p>
+                <a
+                  [href]="identity.website.url"
+                  target="_blank"
+                  class="text-teal-600 hover:underline text-xs"
+                >
+                  Visit →
                 </a>
               </div>
             </div>
