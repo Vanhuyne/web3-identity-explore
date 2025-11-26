@@ -578,7 +578,7 @@
               [disabled]="isBookmarkPending('email')"
               class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
               [title]="
-                isBookmarked('email', identity.email.id ?? undefined)
+                isBookmarked('email', identity.email.id)
                   ? 'Remove bookmark'
                   : 'Add bookmark'
               "
@@ -590,7 +590,7 @@
                 stroke="currentColor"
                 [class]="
                   'w-6 h-6 transition-all duration-300 ' +
-                  (isBookmarked('email', identity.email.id ?? undefined)
+                  (isBookmarked('email', identity.email.id)
                     ? 'fill-amber-400 stroke-amber-600'
                     : 'fill-none stroke-amber-400')
                 "
@@ -625,7 +625,7 @@
               [disabled]="isBookmarkPending('website')"
               class="absolute top-3 right-3 hover:scale-110 transition-transform focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
               [title]="
-                isBookmarked('website', identity.website.id ?? undefined)
+                isBookmarked('website', identity.website.id)
                   ? 'Remove bookmark'
                   : 'Add bookmark'
               "
@@ -637,7 +637,7 @@
                 stroke="currentColor"
                 [class]="
                   'w-6 h-6 transition-all duration-300 ' +
-                  (isBookmarked('website', identity.website.id ?? undefined)
+                  (isBookmarked('website', identity.website.id)
                     ? 'fill-teal-400 stroke-teal-600'
                     : 'fill-none stroke-teal-400')
                 "
