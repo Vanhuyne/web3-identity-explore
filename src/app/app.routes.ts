@@ -12,6 +12,11 @@ export const routes: Routes = [
       .then(m => m.BookmarksViews)
   },
   {
+    path: 'reputation',          // URL: http://localhost:4200/reputation
+    loadComponent: () => import('./components/reputation/reputation')
+      .then(m => m.Reputation)
+  },
+  {
     path: '**',
     redirectTo: '',
   },
