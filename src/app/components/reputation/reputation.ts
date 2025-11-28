@@ -10,125 +10,206 @@ interface Review {
   timestamp: Date;
 }
 
-
-
 @Component({
   selector: 'app-reputation',
   standalone: true,
-  imports: [FormsModule,CommonModule],
+  imports: [FormsModule, CommonModule],
   templateUrl: './reputation.html',
   styleUrl: './reputation.css',
 })
 export class Reputation implements OnInit {
-
+  // Search state
   searchAddress: string = '';
   targetAddress: string = '';
 
+  // Data state
   averageScore: number = 0;
   reviewCount: number = 0;
   reviews: Review[] = [];
 
+  // UI state
   isLoading: boolean = false;
   isSubmitting: boolean = false;
   errorMessage: string = '';
+  successMessage: string = '';
 
+  // Form state
   newReview = {
     message: '',
     score: 0
   };
 
   Math = Math;
-  constructor(private reputationService: ReputationService ) {}
+
+  constructor(private reputationService: ReputationService) {}
 
   ngOnInit(): void {
+    // Component initializes, no auto-load needed
 
-    if (this.targetAddress) {
-      this.loadReputationData();
-      
-    }
   }
 
+  /**
+   * Validate Ethereum address format
+   */
+  private isValidAddress(address: string): boolean {
+    return /^0x[a-fA-F0-9]{40}$/.test(address);
+  }
+
+  /**
+   * Search for a wallet address and load its reputation data
+   */
   async searchReputation(): Promise<void> {
     const address = this.searchAddress.trim();
+    debugger
+    // Clear previous messages
+    this.errorMessage = '';
+    this.successMessage = '';
 
-    // Validate address format
-    if (!address.match(/^0x[a-fA-F0-9]{40}$/)) {
-      this.errorMessage = 'Please enter a valid Ethereum address (0x...)';
+    // Validate address
+    if (!address) {
+      this.errorMessage = 'Please enter a wallet address';
       return;
     }
 
+    if (!this.isValidAddress(address)) {
+      this.errorMessage = 'Invalid address format. Please enter a valid Ethereum address (0x...)';
+      return;
+    }
+
+    // Set target and load data
     this.targetAddress = address;
     this.resetForm();
+    this.reviews = []; // Clear reviews immediately
     await this.loadReputationData();
   }
 
+  /**
+   * Load reputation data for the target address
+   */
   async loadReputationData(): Promise<void> {
-    this.isLoading = true;
+    if (!this.targetAddress) {
+      this.errorMessage = 'No address to load';
+      return;
+    }
+
+    
     this.errorMessage = '';
+    this.reviews = []; // Ensure reviews array is cleared
+    this.isLoading = true;
+    console.log(this.isLoading);
+    
 
     try {
-      // Load average score
-      this.averageScore = await this.reputationService.getAverageScore(
-        this.targetAddress
-      );
+      // Fetch all data concurrently
+      const [scoreResult, countResult, reviewsResult] = await Promise.all([
+        this.reputationService.getAverageScore(this.targetAddress),
+        this.reputationService.getReviewCount(this.targetAddress),
+        this.reputationService.getAllNotes(this.targetAddress)
+      ]);
+      
+      this.averageScore = scoreResult
+      this.reviewCount = countResult
+      this.reviews = reviewsResult 
+      
 
-      // Load review count
-      this.reviewCount = await this.reputationService.getReviewCount(
-        this.targetAddress
-      );
-
-      // Load all reviews only if there are any
-      if (this.reviewCount > 0) {
-        this.reviews = await this.reputationService.getAllNotes(
-          this.targetAddress
-        );
-      } else {
-        this.reviews = [];
-      }
+      console.log(this.reviews);
+      console.log(this.reviewCount);
     } catch (error) {
+      console.error('Error loading reputation data:', error);
       this.errorMessage = 'Failed to load reputation data. Please try again.';
-      console.error('Error loading reputation:', error);
-      this.targetAddress = '';
+      this.resetData();
     } finally {
       this.isLoading = false;
     }
   }
 
- async submitReview(): Promise<void> {
-    if (!this.newReview.message || this.newReview.score === 0) {
-      this.errorMessage = 'Please provide a message and rating.';
+  /**
+   * Submit a new review for the target address
+   */
+  async submitReview(): Promise<void> {
+    // Validate form
+    if (!this.newReview.message.trim()) {
+      this.errorMessage = 'Please write a review message';
+      return;
+    }
+
+    if (this.newReview.score === 0) {
+      this.errorMessage = 'Please select a rating';
       return;
     }
 
     this.isSubmitting = true;
     this.errorMessage = '';
+    this.successMessage = '';
 
     try {
+      // Submit review to service
       await this.reputationService.addNote(
         this.targetAddress,
-        this.newReview.message,
+        this.newReview.message.trim(),
         this.newReview.score
       );
 
-      // Reset form
+      // Show success message
+      this.successMessage = 'Review submitted successfully!';
+
+      // Clear form
       this.resetForm();
 
-      // Reload data
+      // Reload data to show the new review
       await this.loadReputationData();
+
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        this.successMessage = '';
+      }, 3000);
     } catch (error) {
-      this.errorMessage = 'Failed to submit review. Please try again.';
       console.error('Error submitting review:', error);
+      this.errorMessage = 'Failed to submit review. Please try again.';
     } finally {
       this.isSubmitting = false;
     }
   }
 
-  private resetForm(): void {
-    this.newReview = { message: '', score: 0 };
-  }
-
+  /**
+   * Clear error message
+   */
   clearError(): void {
     this.errorMessage = '';
   }
 
+  /**
+   * Clear success message
+   */
+  clearSuccess(): void {
+    this.successMessage = '';
+  }
+
+  /**
+   * Reset form fields
+   */
+  private resetForm(): void {
+    this.newReview = { message: '', score: 0 };
+  }
+
+  /**
+   * Reset all data (used on error)
+   */
+  private resetData(): void {
+    this.targetAddress = '';
+    this.reviews = [];
+    this.averageScore = 0;
+    this.reviewCount = 0;
+  }
+
+  /**
+   * Clear all search and start over
+   */
+  clearSearch(): void {
+    this.searchAddress = '';
+    this.resetData();
+    this.resetForm();
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
 }
